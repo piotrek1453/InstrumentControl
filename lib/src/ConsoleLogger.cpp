@@ -1,4 +1,4 @@
-#include "ConsoleLogger.hpp"
+#include "impl/ConsoleLogger.hpp"
 #include <spdlog/spdlog.h>
 
 void ConsoleLogger::info(const std::string &msg) { spdlog::info(msg); }

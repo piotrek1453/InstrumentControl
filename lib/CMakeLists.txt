@@ -3,8 +3,7 @@ cmake_minimum_required(VERSION 3.27)
 project(InstrumentControlLib)
 
 # add sources and headers
-add_library(InstrumentControlLib src/InstrumentControl.cpp
-                              inc/InstrumentControl.hpp)
+add_library(InstrumentControlLib src/InstrumentControl.cpp)
 target_include_directories(InstrumentControlLib
   PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
 
