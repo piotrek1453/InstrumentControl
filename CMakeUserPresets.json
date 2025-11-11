@@ -1,0 +1,16 @@
+{
+    "version": 4,
+    "vendor": {
+        "conan": {}
+    },
+    "include": [
+        "build/CMakePresets.json"
+    ],
+    "configurePresets": [
+        {
+            "name": "conan-release-ninja",
+            "inherits": "conan-release",
+            "generator": "Ninja"
+        }
+    ]
+}
