@@ -1,13 +1,12 @@
 #pragma once
-#include <string>
+#include <string_view>
 
 class LoggerIfc {
 public:
-  LoggerIfc() noexcept;
   virtual ~LoggerIfc() = default;
 
-  virtual void info(const std::string &message) = 0;
-  virtual void warn(const std::string &message) = 0;
-  virtual void error(const std::string &message) = 0;
-  virtual void debug(const std::string &message) = 0;
+  virtual void info(std::string_view message) = 0;
+  virtual void warn(std::string_view message) = 0;
+  virtual void error(std::string_view message) = 0;
+  virtual void debug(std::string_view message) = 0;
 };
