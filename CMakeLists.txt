@@ -11,6 +11,12 @@ project(InstrumentControl)
 
 add_subdirectory(lib)
 
+# Optionally build examples showing generic business logic usage
+option(BUILD_EXAMPLES "Build example application(s)" OFF)
+if(BUILD_EXAMPLES)
+  add_subdirectory(examples)
+endif()
+
 # Symlink compile_commands.json to project root
 if(CMAKE_EXPORT_COMPILE_COMMANDS)
   execute_process(

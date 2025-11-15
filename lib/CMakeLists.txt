@@ -7,28 +7,19 @@ project(InstrumentControlLib LANGUAGES CXX)
 # -----------------------------
 set(IMPLEMENTATION
     "VISA"
-    CACHE STRING "Implementation of ResourceManager: VISA / MOCK / OTHER")
+    CACHE STRING "Implementation: VISA / OTHER")
 set_property(CACHE IMPLEMENTATION PROPERTY STRINGS VISA MOCK OTHER)
 
-message(STATUS "Selected ResourceManager implementation: ${IMPLEMENTATION}")
+message(STATUS "Selected implementation: ${IMPLEMENTATION}")
 
 # -----------------------------
 # Choose sources based on backend
 # -----------------------------
 set(LIB_SOURCES "")
 
-if(IMPLEMENTATION STREQUAL "VISA")
-  list(APPEND LIB_SOURCES src/VISAResourceManager.cpp src/VISAResource.cpp)
-  # example
-
-  # elseif(IMPLEMENTATION STREQUAL "MOCK") list(APPEND LIB_SOURCES
-  # src/MockResourceManager.cpp src/MockResource.cpp)
-
-  # elseif(IMPLEMENTATION STREQUAL "OTHER") list(APPEND LIB_SOURCES
-  # src/OtherResourceManager.cpp src/OtherResource.cpp)
-else()
-  message(FATAL_ERROR "Unknown IMPLEMENTATION: ${IMPLEMENTATION}")
-endif()
+file(GLOB IMPLEMENTATION_SOURCES
+     "${CMAKE_CURRENT_SOURCE_DIR}/src/${IMPLEMENTATION}/*.cpp")
+list(APPEND LIB_SOURCES ${IMPLEMENTATION_SOURCES})
 
 # -----------------------------
 # Add specific lib
@@ -36,6 +27,8 @@ endif()
 add_library(InstrumentControlLib ${LIB_SOURCES})
 target_include_directories(InstrumentControlLib
                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+target_compile_definitions(InstrumentControlLib
+                           PUBLIC IMPLEMENTATION_${IMPLEMENTATION})
 
 # -----------------------------
 # Link external libs
@@ -59,10 +52,10 @@ if(IMPLEMENTATION STREQUAL "VISA")
                                PUBLIC "/usr/include/ni-visa")
     target_link_libraries(InstrumentControlLib PUBLIC visa)
   endif()
-endif()
 
-# -----------------------------
-# Link spdlog
-# -----------------------------
-find_package(spdlog CONFIG REQUIRED)
-target_link_libraries(InstrumentControlLib PUBLIC spdlog::spdlog)
+  # -----------------------------
+  # Link spdlog
+  # -----------------------------
+  find_package(spdlog CONFIG REQUIRED)
+  target_link_libraries(InstrumentControlLib PUBLIC spdlog::spdlog)
+endif()

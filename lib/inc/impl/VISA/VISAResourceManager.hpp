@@ -5,15 +5,16 @@
 #include <memory>
 #include <string_view>
 
-class VISAResourceManager : public ResourceManagerIfc {
+class VISAResourceManager : public ResourceManagerIfc
+{
 public:
-  VISAResourceManager(std::shared_ptr<LoggerIfc> logger);
+  VISAResourceManager(LoggerIfc &logger);
   ~VISAResourceManager() = default;
 
   std::vector<std::string> listAvailableResources() const override;
-  std::shared_ptr<ResourceIfc>
+  std::unique_ptr<ResourceIfc>
   openResource(std::string_view resourceString) override;
 
 private:
-  std::shared_ptr<LoggerIfc> logger_;
+  LoggerIfc &logger_;
 };

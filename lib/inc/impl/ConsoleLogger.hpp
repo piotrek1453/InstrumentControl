@@ -3,10 +3,32 @@
 #include "spdlog/spdlog.h"
 #include <string_view>
 
-class ConsoleLogger : public LoggerIfc {
+class ConsoleLogger : public LoggerIfc
+{
 public:
-  void info(std::string_view msg) override { spdlog::info("{}", msg); }
-  void warn(std::string_view msg) override { spdlog::warn("{}", msg); }
-  void error(std::string_view msg) override { spdlog::error("{}", msg); }
-  void debug(std::string_view msg) override { spdlog::debug("{}", msg); }
+  void log(std::string_view message, LogLevel level = LogLevel::Info) override
+  {
+    switch (level)
+    {
+    case LogLevel::Info:
+      spdlog::info("{}", message);
+      break;
+
+    case LogLevel::Warn:
+      spdlog::warn("{}", message);
+      break;
+
+    case LogLevel::Error:
+      spdlog::error("{}", message);
+      break;
+
+    case LogLevel::Debug:
+      spdlog::debug("{}", message);
+      break;
+
+    default:
+      spdlog::warn("UNKNOWN LOG LEVEL:\n{}", message);
+      break;
+    }
+  }
 };

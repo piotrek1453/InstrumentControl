@@ -4,6 +4,7 @@
 BUILD_DIR ?= build
 IMPLEMENTATION ?= VISA
 BUILD_TYPE ?= Debug   # Debug or Release
+BUILD_EXAMPLES ?= OFF # ON to build example app(s)
 
 .PHONY: build clean init_venv generate_compile_commands help conan
 
@@ -26,10 +27,10 @@ conan:
 # CMake Build (Debug or Release) with backend selection
 # ----------------------------------------
 build: conan
-	@echo "Building InstrumentControlLib with backend: $(IMPLEMENTATION) in $(BUILD_TYPE) mode"
+	@echo "Building InstrumentControlLib (examples=$(BUILD_EXAMPLES)) with backend: $(IMPLEMENTATION) in $(BUILD_TYPE) mode"
 	mkdir -p $(BUILD_DIR)
 	cd $(BUILD_DIR) && \
-	cmake -GNinja -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) -DIMPLEMENTATION=$(IMPLEMENTATION) .. && \
+	cmake -GNinja -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) -DIMPLEMENTATION=$(IMPLEMENTATION) -DBUILD_EXAMPLES=$(BUILD_EXAMPLES) .. && \
 	cmake --build . -- -j$(shell nproc)
 
 # ----------------------------------------
@@ -44,7 +45,7 @@ clean:
 # ----------------------------------------
 help:
 	@echo "Usage:"
-	@echo "  make build [IMPLEMENTATION=VISA/MOCK/OTHER] [BUILD_TYPE=Debug/Release]"
+	@echo "  make build [IMPLEMENTATION=VISA/MOCK/OTHER] [BUILD_TYPE=Debug/Release] [BUILD_EXAMPLES=ON/OFF]"
 	@echo "      Build the library with selected backend and build type"
 	@echo "  make clean"
 	@echo "      Remove build directory"
@@ -54,3 +55,4 @@ help:
 	@echo "Defaults:"
 	@echo "  IMPLEMENTATION=$(IMPLEMENTATION)"
 	@echo "  BUILD_TYPE=$(BUILD_TYPE)"
+	@echo "  BUILD_EXAMPLES=$(BUILD_EXAMPLES)"
