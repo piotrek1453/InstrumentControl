@@ -1,1 +1,2 @@
 conan >= 2.22.2
+pre-commit >= 4.4.0

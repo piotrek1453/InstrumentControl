@@ -1,4 +1,3 @@
-#include <string_view>
 #ifdef IMPLEMENTATION_VISA
 #include "impl/ConsoleLogger.hpp"
 #include "impl/VISA/VISAResourceManager.hpp"
@@ -12,7 +11,7 @@ auto main() -> int {
 
   logger.log("Example: Resource manager instantiated");
 
-  logger.log(std::string_view("Resources list:\n"));
+  logger.log("Available resources:\n");
   for (const auto &resource : manager.listAvailableResources()) {
     logger.log(resource);
   }

@@ -5,6 +5,7 @@ BUILD_DIR ?= build
 IMPLEMENTATION ?= VISA
 BUILD_TYPE ?= Debug   # Debug or Release
 BUILD_EXAMPLES ?= OFF # ON to build example app(s)
+SRCS := $(shell find examples lib -name '*.cpp' -o -name '*.hpp' -o -name '*.h')
 
 .PHONY: build clean init_venv help conan
 
@@ -39,6 +40,34 @@ build: conan
 clean:
 	@echo "Cleaning build directory..."
 	rm -rf $(BUILD_DIR)
+
+# ----------------------------------------
+# Setup pre-commit hooks
+# ----------------------------------------
+setup_pre_commit:
+	pre-commit install
+
+# ----------------------------------------
+# Check code formatting with clang-format
+# ----------------------------------------
+format-check:
+	@echo "Checking C++ formatting..."
+	@clang-format -style=file --dry-run --Werror $(SRCS)
+	@echo "clang-format passed."
+
+# ----------------------------------------
+# Check code style with clang-tidy
+# ----------------------------------------
+tidy-check:
+	@echo "Running clang-tidy..."
+	@run-clang-tidy -p build -quiet
+	@echo "clang-tidy passed."
+
+# ----------------------------------------
+# Full source code check
+# ----------------------------------------
+check: format-check tidy-check
+	@echo "All checks passed!"
 
 # ----------------------------------------
 # CLI help / usage hints
