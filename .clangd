@@ -1,0 +1,7 @@
+CompileFlags:
+  Add: [-Wall, -Wextra]
+
+Diagnostics:
+  ClangTidy:
+    Add:
+      [modernize-*, readability-*, bugprone-*, concurrency-*, thread-safety-*]

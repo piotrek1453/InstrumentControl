@@ -1,19 +1,18 @@
 #pragma once
 #include "ifc/LoggerIfc.hpp"
 #include "ifc/ResourceManagerIfc.hpp"
-#include "visa.h"
 #include <memory>
 #include <string_view>
 
-class VISAResourceManager : public ResourceManagerIfc
-{
+class VISAResourceManager : public ResourceManagerIfc {
 public:
   VISAResourceManager(LoggerIfc &logger);
-  ~VISAResourceManager() = default;
+  ~VISAResourceManager() override = default;
 
-  std::vector<std::string> listAvailableResources() const override;
-  std::unique_ptr<ResourceIfc>
-  openResource(std::string_view resourceString) override;
+  [[nodiscard]] auto listAvailableResources() const
+      -> std::vector<std::string> override;
+  auto openResource(std::string_view resourceString)
+      -> std::unique_ptr<ResourceIfc> override;
 
 private:
   LoggerIfc &logger_;

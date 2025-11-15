@@ -7,11 +7,12 @@
 
 #include "ResourceIfc.hpp"
 
-class ResourceManagerIfc
-{
+class ResourceManagerIfc {
 public:
   virtual ~ResourceManagerIfc() = default;
 
-  virtual std::vector<std::string> listAvailableResources() const = 0;
-  virtual std::unique_ptr<ResourceIfc> openResource(std::string_view resourceString) = 0;
+  [[nodiscard]] virtual auto listAvailableResources() const
+      -> std::vector<std::string> = 0;
+  virtual auto openResource(std::string_view resourceString)
+      -> std::unique_ptr<ResourceIfc> = 0;
 };

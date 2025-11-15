@@ -1,18 +1,12 @@
 #pragma once
 #include <string_view>
 
-enum class LogLevel
-{
-  Info,
-  Warn,
-  Error,
-  Debug
-};
+enum class LogLevel { Info, Warn, Error, Debug };
 
-class LoggerIfc
-{
+class LoggerIfc {
 public:
   virtual ~LoggerIfc() = default;
 
-  virtual void log(std::string_view message, LogLevel level = LogLevel::Info) = 0;
+  virtual void log(std::string_view message,
+                   LogLevel level = LogLevel::Info) = 0;
 };

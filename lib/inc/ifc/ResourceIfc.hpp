@@ -2,28 +2,24 @@
 
 #include <string_view>
 
-struct ReadResult
-{
+struct ReadResult {
   bool ok = false;
-  std::string value;
+  std::string_view value;
 
-  static ReadResult success(std::string v)
-  {
-    return {true, std::move(v)};
+  static auto success(std::string_view view) -> ReadResult {
+    return ReadResult{.ok = true, .value = std::move(view)};
   }
 
-  static ReadResult failure()
-  {
-    return {false, {}};
+  static auto failure() -> ReadResult {
+    return ReadResult{.ok = false, .value = {}};
   }
 };
 
-class ResourceIfc
-{
+class ResourceIfc {
 public:
   virtual ~ResourceIfc() = default;
 
-  virtual bool write(std::string_view command) = 0;
-  virtual ReadResult read() = 0;
-  virtual ReadResult query(std::string_view command) = 0;
+  virtual auto write(std::string_view command) -> bool = 0;
+  virtual auto read() -> ReadResult = 0;
+  virtual auto query(std::string_view command) -> ReadResult = 0;
 };

@@ -6,7 +6,7 @@ IMPLEMENTATION ?= VISA
 BUILD_TYPE ?= Debug   # Debug or Release
 BUILD_EXAMPLES ?= OFF # ON to build example app(s)
 
-.PHONY: build clean init_venv generate_compile_commands help conan
+.PHONY: build clean init_venv help conan
 
 # ----------------------------------------
 # Python virtual environment (optional)

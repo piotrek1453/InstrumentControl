@@ -3,13 +3,10 @@
 #include "spdlog/spdlog.h"
 #include <string_view>
 
-class ConsoleLogger : public LoggerIfc
-{
+class ConsoleLogger : public LoggerIfc {
 public:
-  void log(std::string_view message, LogLevel level = LogLevel::Info) override
-  {
-    switch (level)
-    {
+  void log(std::string_view message, LogLevel level = LogLevel::Info) override {
+    switch (level) {
     case LogLevel::Info:
       spdlog::info("{}", message);
       break;

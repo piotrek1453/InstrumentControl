@@ -1,18 +1,21 @@
+#include <string_view>
 #ifdef IMPLEMENTATION_VISA
 #include "impl/ConsoleLogger.hpp"
 #include "impl/VISA/VISAResourceManager.hpp"
-typedef ConsoleLogger Logger;
-typedef VISAResourceManager ResourceManager;
+using Logger = ConsoleLogger;
+using ResourceManager = VISAResourceManager;
 #endif
 
-int main()
-{
+auto main() -> int {
   Logger logger;
   ResourceManager manager(logger);
 
   logger.log("Example: Resource manager instantiated");
 
-  manager.listAvailableResources();
+  logger.log(std::string_view("Resources list:\n"));
+  for (const auto &resource : manager.listAvailableResources()) {
+    logger.log(resource);
+  }
   std::unique_ptr<ResourceIfc> resource = manager.openResource("test");
 
   resource->query("*IDN?");
