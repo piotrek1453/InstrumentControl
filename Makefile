@@ -2,12 +2,23 @@
 # Build parameters (can be overridden from CLI)
 # ----------------------------------------
 BUILD_DIR ?= build
-IMPLEMENTATION ?= VISA
-BUILD_TYPE ?= Debug   # Debug or Release
-BUILD_EXAMPLES ?= OFF # ON to build example app(s)
+IMPLEMENTATION ?= VISA            # VISA | VISAClient | ESP32 | RP2040
+BUILD_TYPE ?= Debug               # Debug or Release
+BUILD_EXAMPLES ?= OFF             # ON to build example app(s)
+GENERATOR ?= Ninja                # CMake generator
+TOOLCHAIN ?=                      # Optional: path to CMake toolchain file (MCU)
+CMAKE_ARGS ?=                     # Extra CMake -D flags, e.g. -DPICO_SDK_PATH=...
 SRCS := $(shell find examples lib -name '*.cpp' -o -name '*.hpp' -o -name '*.h')
 
-.PHONY: build clean init_venv help conan
+.PHONY: build clean init_venv help conan pre_build build-visa build-visaclient build-esp32 build-rp2040 run-example
+
+# Decide if we need Conan dependencies by default
+# PC impls use Conan (VISA, VISAClient); MCU impls default to NO
+ifeq ($(filter $(IMPLEMENTATION),VISA VISAClient),$(IMPLEMENTATION))
+	USE_CONAN ?= ON
+else
+	USE_CONAN ?= OFF
+endif
 
 # ----------------------------------------
 # Python virtual environment (optional)
@@ -24,15 +35,46 @@ conan:
 	mkdir -p $(BUILD_DIR)
 	cd $(BUILD_DIR) && conan install .. --build=missing -s build_type=$(BUILD_TYPE)
 
+# Optional pre-build step depending on USE_CONAN
+ifeq ($(USE_CONAN),ON)
+pre_build: conan
+else
+pre_build:
+	@echo "Skipping Conan (USE_CONAN=$(USE_CONAN))"
+endif
+
 # ----------------------------------------
 # CMake Build (Debug or Release) with backend selection
 # ----------------------------------------
-build: conan
+build: pre_build
 	@echo "Building InstrumentControlLib (examples=$(BUILD_EXAMPLES)) with backend: $(IMPLEMENTATION) in $(BUILD_TYPE) mode"
 	mkdir -p $(BUILD_DIR)
 	cd $(BUILD_DIR) && \
-	cmake -GNinja -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) -DIMPLEMENTATION=$(IMPLEMENTATION) -DBUILD_EXAMPLES=$(BUILD_EXAMPLES) .. && \
+	cmake -G$(GENERATOR) \
+	  -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) \
+	  -DIMPLEMENTATION=$(IMPLEMENTATION) \
+	  -DBUILD_EXAMPLES=$(BUILD_EXAMPLES) \
+	  $(if $(TOOLCHAIN),-DCMAKE_TOOLCHAIN_FILE=$(TOOLCHAIN),) \
+	  $(CMAKE_ARGS) \
+	  .. && \
 	cmake --build . -- -j$(shell nproc)
+
+# Convenience targets per implementation
+build-visa:
+	$(MAKE) build IMPLEMENTATION=VISA USE_CONAN=ON BUILD_EXAMPLES=ON
+
+build-visaclient:
+	$(MAKE) build IMPLEMENTATION=VISAClient USE_CONAN=ON BUILD_EXAMPLES=ON
+
+build-esp32:
+	$(MAKE) build IMPLEMENTATION=ESP32 USE_CONAN=OFF BUILD_EXAMPLES=ON
+
+build-rp2040:
+	$(MAKE) build IMPLEMENTATION=RP2040 USE_CONAN=OFF BUILD_EXAMPLES=ON
+
+# Run example (only meaningful for PC impls)
+run-example:
+	./$(BUILD_DIR)/examples/generic/InstrumentControlExample
 
 # ----------------------------------------
 # Clean build directory
@@ -40,6 +82,14 @@ build: conan
 clean:
 	@echo "Cleaning build directory..."
 	rm -rf $(BUILD_DIR)
+
+# ----------------------------------------
+# Format code in-place with clang-format
+# ----------------------------------------
+format:
+	@echo "Formatting C++ files in place..."
+	@clang-format -style=file -i $(SRCS)
+	@echo "clang-format complete."
 
 # ----------------------------------------
 # Setup pre-commit hooks
@@ -74,14 +124,20 @@ check: format-check tidy-check
 # ----------------------------------------
 help:
 	@echo "Usage:"
-	@echo "  make build [IMPLEMENTATION=VISA/MOCK/OTHER] [BUILD_TYPE=Debug/Release] [BUILD_EXAMPLES=ON/OFF]"
+	@echo "  make build [IMPLEMENTATION=VISA|VISAClient|ESP32|RP2040] [BUILD_TYPE=Debug/Release] [BUILD_EXAMPLES=ON/OFF] [USE_CONAN=ON/OFF] [GENERATOR=Ninja|Unix\ Makefiles] [TOOLCHAIN=/path/to/toolchain.cmake] [CMAKE_ARGS='-D...']"
 	@echo "      Build the library with selected backend and build type"
+	@echo "  make build-visa | build-visaclient | build-esp32 | build-rp2040"
+	@echo "      Convenience aliases for common builds"
 	@echo "  make clean"
 	@echo "      Remove build directory"
 	@echo "  make init_venv"
 	@echo "      Create Python virtual environment and install requirements"
+	@echo "  make run-example"
+	@echo "      Run the generic example application (PC impls only)"
 	@echo ""
 	@echo "Defaults:"
 	@echo "  IMPLEMENTATION=$(IMPLEMENTATION)"
 	@echo "  BUILD_TYPE=$(BUILD_TYPE)"
 	@echo "  BUILD_EXAMPLES=$(BUILD_EXAMPLES)"
+	@echo "  USE_CONAN=$(USE_CONAN)"
+	@echo "  GENERATOR=$(GENERATOR)"
