@@ -1,3 +1,6 @@
+#include "ifc/LoggerIfc.hpp"
+#include <fmt/format.h>
+#include <string>
 #ifdef IMPLEMENTATION_VISA
 #include "impl/ConsoleLogger.hpp"
 #include "impl/VISA/VISAResourceManager.hpp"
@@ -27,21 +30,27 @@ using ResourceManager = RP2040ResourceManager;
 #endif
 
 auto main() -> int {
+  // create logger and enable highest level of logs
   Logger logger;
+  logger.setLoggingLevel(LogLevel::Trace);
+
   ResourceManager manager(logger);
 
   logger.log("Example: Resource manager instantiated");
 
-  logger.log("Available resources:\n");
-  for (const auto &resource : manager.listAvailableResources()) {
-    logger.log(resource);
+  auto resources = manager.listAvailableResources();
+  std::string resourcesLog{};
+  for (const auto &resource : resources) {
+    resourcesLog += '\t' + resource + '\n';
   }
+  logger.log(
+      fmt::format("Available resources:\n{}\nsize of resources vector: {}",
+                  resourcesLog, resources.size()));
 
   auto resource = manager.openResource("test");
   if (resource) {
     (void)resource->query("*IDN?");
   }
 
-  logger.log("InstrumentControl example built with selected implementation.");
   return 0;
 }

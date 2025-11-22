@@ -4,7 +4,8 @@
 #include <string>
 #include <string_view>
 
-VISAResource::VISAResource(LoggerIfc &logger, std::string_view resource_string)
+VISAResource::VISAResource(LoggerIfc &logger,
+                           std::string_view resource_string) noexcept
     : logger_(logger) {
   logger_.log(fmt::format("Created VISAResource with resource string {}",
                           resource_string));

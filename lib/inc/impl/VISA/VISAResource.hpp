@@ -5,7 +5,8 @@
 
 class VISAResource : public ResourceIfc {
 public:
-  explicit VISAResource(LoggerIfc &logger, std::string_view resource_string);
+  explicit VISAResource(LoggerIfc &logger,
+                        std::string_view resource_string) noexcept;
   ~VISAResource() override = default;
 
   auto write(std::string_view command) -> bool override;

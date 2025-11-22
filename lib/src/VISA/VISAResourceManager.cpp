@@ -1,19 +1,67 @@
 #include "impl/VISA/VISAResourceManager.hpp"
+#include "ifc/LoggerIfc.hpp"
 #include "impl/VISA/VISAResource.hpp"
+#include <array>
+#include <fmt/core.h>
+#include <fmt/format.h>
+#include <iterator>
 #include <memory>
 #include <string>
 #include <vector>
+#include <visa.h>
+#include <visatype.h>
 
-VISAResourceManager::VISAResourceManager(LoggerIfc &logger) : logger_(logger) {}
+VISAResourceManager::VISAResourceManager(LoggerIfc &logger) noexcept
+    : mLogger(logger) {
+  // open RM and log status
+  auto status = viOpenDefaultRM(&mResourceManager);
+  mLogger.log(fmt::format(
+      "Opening VISA resource manager finished with status {}", status));
+}
+
+VISAResourceManager::~VISAResourceManager() {
+  // clean up the buffer, close the resource manager
+  viClear(mResourceManager);
+  viClose(mResourceManager);
+}
 
 auto VISAResourceManager::listAvailableResources() const
     -> std::vector<std::string> {
-  // TODO: Implement VISA enumeration; placeholder empty
-  return {};
+  // define needed vars
+  ViFindList findList{};
+  ViUInt32 numInstrs{};
+  std::array<char, VI_FIND_BUFLEN> instrDescriptor{};
+  std::vector<std::string> availableResources{};
+
+  auto status = viFindRsrc(mResourceManager, const_cast<ViChar *>("?*"),
+                           &findList, &numInstrs, instrDescriptor.data());
+  if (status != VI_SUCCESS) {
+    mLogger.log(fmt::format("Error discovering resources, status: {}", status));
+    return {};
+  }
+
+  // iterate until all resource enumerated, append resource descriptors as
+  // strings to availableResources
+  do {
+    availableResources.emplace_back(std::begin(instrDescriptor),
+                                    std::end(instrDescriptor));
+    mLogger.log(fmt::format("Enumerating VISA resource finished with status: "
+                            "{}\nObtained instrument descriptor: {}\nNumber of "
+                            "instruments left to enumerate: {}",
+                            status, instrDescriptor.data(), numInstrs - 1),
+                LogLevel::Trace);
+
+    // VISA doesn't clean the buffer: make sure it's empty not to get
+    // garbage in any of the resource strings
+    instrDescriptor = {};
+    status = viFindNext(findList, instrDescriptor.data());
+  } while (--numInstrs > 0);
+
+  return availableResources;
 }
 
 auto VISAResourceManager::openResource(std::string_view resourceString)
     -> std::unique_ptr<ResourceIfc> {
   // TODO: Use VISA API to open; placeholder creates stub resource
-  return std::make_unique<VISAResource>(logger_, resourceString);
+  return std::make_unique<VISAResource>(mLogger, resourceString);
 }

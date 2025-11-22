@@ -3,15 +3,15 @@
 #include <string_view>
 
 struct ReadResult {
-  bool ok = false;
+  bool isOk = false;
   std::string_view value;
 
   static auto success(std::string_view view) -> ReadResult {
-    return ReadResult{.ok = true, .value = std::move(view)};
+    return ReadResult{.isOk = true, .value = std::move(view)};
   }
 
   static auto failure() -> ReadResult {
-    return ReadResult{.ok = false, .value = {}};
+    return ReadResult{.isOk = false, .value = {}};
   }
 };
 
