@@ -3,7 +3,8 @@
 #include "ifc/ResourceIfc.hpp"
 #include <string_view>
 
-class VISAClientResource : public ResourceIfc {
+class VISAClientResource : public ResourceIfc
+{
 public:
   explicit VISAClientResource(LoggerIfc &logger,
                               std::string_view resource_string);

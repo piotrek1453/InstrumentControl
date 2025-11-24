@@ -2,9 +2,17 @@
 #include <cstdint>
 #include <string_view>
 
-enum class LogLevel : uint32_t { Info, Warn, Error, Debug, Trace };
+enum class LogLevel : uint32_t
+{
+  Info,
+  Warn,
+  Error,
+  Debug,
+  Trace
+};
 
-class LoggerIfc {
+class LoggerIfc
+{
 public:
   virtual ~LoggerIfc() = default;
 

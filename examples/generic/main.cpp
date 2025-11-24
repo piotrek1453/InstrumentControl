@@ -29,7 +29,8 @@ using ResourceManager = RP2040ResourceManager;
 #error "Selected implementation does not provide headers here yet"
 #endif
 
-auto main() -> int {
+auto main() -> int
+{
   // create logger and enable highest level of logs
   Logger logger;
   logger.setLoggingLevel(LogLevel::Trace);
@@ -40,15 +41,18 @@ auto main() -> int {
 
   auto resources = manager.listAvailableResources();
   std::string resourcesLog{};
-  for (const auto &resource : resources) {
+  for (const auto &resource : resources)
+  {
     resourcesLog += '\t' + resource + '\n';
   }
   logger.log(
       fmt::format("Available resources:\n{}\nsize of resources vector: {}",
-                  resourcesLog, resources.size()));
+                  resourcesLog,
+                  resources.size()));
 
-  auto resource = manager.openResource("test");
-  if (resource) {
+  auto resource = manager.openResource(resources[0]);
+  if (resource)
+  {
     (void)resource->query("*IDN?");
   }
 

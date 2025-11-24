@@ -4,7 +4,8 @@
 #include <memory>
 #include <string_view>
 
-class ESP32ResourceManager : public ResourceManagerIfc {
+class ESP32ResourceManager : public ResourceManagerIfc
+{
 public:
   ESP32ResourceManager(LoggerIfc &logger);
   ~ESP32ResourceManager() override = default;

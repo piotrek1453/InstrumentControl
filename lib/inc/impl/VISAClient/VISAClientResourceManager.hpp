@@ -4,7 +4,8 @@
 #include <memory>
 #include <string_view>
 
-class VISAClientResourceManager : public ResourceManagerIfc {
+class VISAClientResourceManager : public ResourceManagerIfc
+{
 public:
   VISAClientResourceManager(LoggerIfc &logger);
   ~VISAClientResourceManager() override = default;

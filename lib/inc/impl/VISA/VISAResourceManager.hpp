@@ -5,7 +5,8 @@
 #include <string_view>
 #include <visa.h>
 
-class VISAResourceManager : public ResourceManagerIfc {
+class VISAResourceManager : public ResourceManagerIfc
+{
 public:
   VISAResourceManager(LoggerIfc &logger) noexcept;
   ~VISAResourceManager() override;

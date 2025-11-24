@@ -7,7 +7,8 @@
 
 #include "ResourceIfc.hpp"
 
-class ResourceManagerIfc {
+class ResourceManagerIfc
+{
 public:
   virtual ~ResourceManagerIfc() = default;
 

@@ -1,0 +1,10 @@
+BasedOnStyle: LLVM
+Language: Cpp
+Standard: Auto
+BinPackArguments: false
+BinPackParameters: AlwaysOnePerLine
+ExperimentalAutoDetectBinPacking: false
+BreakFunctionDefinitionParameters: true
+BreakBeforeBraces: Allman
+AllowAllParametersOfDeclarationOnNextLine: false
+ColumnLimit: 79

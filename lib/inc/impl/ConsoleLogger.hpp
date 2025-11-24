@@ -14,13 +14,19 @@ static const std::unordered_map<LogLevel, spdlog::level::level_enum>
                 {LogLevel::Debug, spdlog::level::debug},
                 {LogLevel::Trace, spdlog::level::trace}};
 
-class ConsoleLogger : public LoggerIfc {
+class ConsoleLogger : public LoggerIfc
+{
 public:
-  void setLoggingLevel(LogLevel level) override {
+  void setLoggingLevel(
+      LogLevel level) override
+  {
     mLogger->set_level(logLevelMap.at(level));
   }
 
-  void log(std::string_view message, LogLevel level = LogLevel::Info) override {
+  void log(
+      std::string_view message,
+      LogLevel level = LogLevel::Info) override
+  {
     mLogger->log(logLevelMap.at(level), message);
   }
 

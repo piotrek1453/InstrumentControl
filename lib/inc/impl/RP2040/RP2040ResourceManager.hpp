@@ -4,7 +4,8 @@
 #include <memory>
 #include <string_view>
 
-class RP2040ResourceManager : public ResourceManagerIfc {
+class RP2040ResourceManager : public ResourceManagerIfc
+{
 public:
   RP2040ResourceManager(LoggerIfc &logger);
   ~RP2040ResourceManager() override = default;
