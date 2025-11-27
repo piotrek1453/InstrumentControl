@@ -1,7 +1,6 @@
 #pragma once
 #include "ifc/LoggerIfc.hpp"
 #include "ifc/ResourceIfc.hpp"
-#include <array>
 #include <atomic>
 #include <string_view>
 #include <visa.h>
@@ -27,6 +26,6 @@ private:
   LoggerIfc &logger_;
   std::string_view mResourceString;
   ViSession mResourceManagerHandle, mInstrumentSessionHandle;
-  std::array<ViChar, INSTRUMENT_BUFFER_SIZE_B> mBuffer{0};
   std::atomic<bool> mIsOpen{false};
+  ViUInt32 mIOBytes{};
 };

@@ -51,10 +51,12 @@ auto main() -> int
                   resources.size()));
 
   auto resource = manager.openResource(resources[0]);
-  if (resource)
-  {
-    (void)resource->query("*IDN?");
-  }
+  // if (resource)
+  // {
+  //   resource->write("*IDN?");
+  //   resource->read();
+  //   resource->query("*IDN?");
+  // }
 
   return 0;
 }
