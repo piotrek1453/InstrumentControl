@@ -1,6 +1,7 @@
 #pragma once
 #include "ifc/LoggerIfc.hpp"
 #include <print>
+#include <source_location>
 #include <string>
 
 class RP2040Logger : public LoggerIfc
@@ -8,7 +9,9 @@ class RP2040Logger : public LoggerIfc
 public:
   void log(
       const std::string &message,
-      LogLevel level = LogLevel::Info) override
+      LogLevel level = LogLevel::Info,
+      const std::source_location &location =
+          std::source_location::current()) override
   {
     switch (level)
     {

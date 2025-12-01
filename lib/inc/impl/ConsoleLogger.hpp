@@ -1,7 +1,10 @@
 #pragma once
 #include "ifc/LoggerIfc.hpp"
 #include "spdlog/sinks/stdout_color_sinks.h"
+#include <filesystem>
+#include <fmt/format.h>
 #include <memory>
+#include <source_location>
 #include <spdlog/common.h>
 #include <spdlog/logger.h>
 #include <string>
@@ -25,9 +28,15 @@ public:
 
   void log(
       const std::string &message,
-      LogLevel level = LogLevel::Info) override
+      LogLevel level = LogLevel::Info,
+      const std::source_location &location =
+          std::source_location::current()) override
   {
-    mLogger->log(logLevelMap.at(level), message);
+    auto filename =
+        std::filesystem::path(location.file_name()).filename().string();
+    auto formatted =
+        fmt::format("[{}:{}] {}", filename, location.line(), message);
+    mLogger->log(logLevelMap.at(level), formatted);
   }
 
 private:

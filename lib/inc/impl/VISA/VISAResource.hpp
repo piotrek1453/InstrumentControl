@@ -9,7 +9,7 @@
 
 constexpr ViAccessMode INSTRUMENT_ACCESS_MODE{VI_NULL};
 constexpr ViUInt32 INSTRUMENT_TIMEOUT_MS{200};
-constexpr size_t INSTRUMENT_BUFFER_SIZE_B{65536};
+constexpr size_t INSTRUMENT_BUFFER_SIZE_B{32768};
 
 class VISAResource : public ResourceIfc
 {

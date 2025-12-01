@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <source_location>
 #include <string>
 
 enum class LogLevel : uint32_t
@@ -18,5 +19,7 @@ public:
 
   virtual void setLoggingLevel(LogLevel level) = 0;
   virtual void log(const std::string &message,
-                   LogLevel level = LogLevel::Info) = 0;
+                   LogLevel level = LogLevel::Info,
+                   const std::source_location &location =
+                       std::source_location::current()) = 0;
 };
