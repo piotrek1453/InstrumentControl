@@ -4,7 +4,6 @@
 #include <array>
 #include <fmt/core.h>
 #include <fmt/format.h>
-#include <iterator>
 #include <memory>
 #include <string>
 #include <vector>
@@ -16,7 +15,7 @@ VISAResourceManager::VISAResourceManager(
     : mLogger(logger)
 {
   // open RM and log status
-  auto status = viOpenDefaultRM(&mResourceManager);
+  auto status = viOpenDefaultRM(&mResourceManagerHandle);
   mLogger.log(fmt::format(
       "Opening VISA resource manager finished with status {}", status));
 }
@@ -24,8 +23,8 @@ VISAResourceManager::VISAResourceManager(
 VISAResourceManager::~VISAResourceManager()
 {
   // clean up the buffer, close the resource manager
-  viClear(mResourceManager);
-  viClose(mResourceManager);
+  viClear(mResourceManagerHandle);
+  viClose(mResourceManagerHandle);
 }
 
 auto VISAResourceManager::listAvailableResources() const
@@ -37,7 +36,7 @@ auto VISAResourceManager::listAvailableResources() const
   std::array<char, VI_FIND_BUFLEN> instrDescriptor{};
   std::vector<std::string> availableResources{};
 
-  auto status = viFindRsrc(mResourceManager,
+  auto status = viFindRsrc(mResourceManagerHandle,
                            const_cast<ViChar *>("?*"),
                            &findList,
                            &numInstrs,
@@ -53,8 +52,7 @@ auto VISAResourceManager::listAvailableResources() const
   // strings to availableResources
   do
   {
-    availableResources.emplace_back(std::begin(instrDescriptor),
-                                    std::end(instrDescriptor));
+    availableResources.emplace_back(instrDescriptor.data());
     mLogger.log(
         fmt::format("Enumerating VISA resource finished with status: "
                     "{}\nObtained instrument descriptor: {}\nNumber of "
@@ -74,8 +72,7 @@ auto VISAResourceManager::listAvailableResources() const
 }
 
 auto VISAResourceManager::openResource(
-    std::string_view resourceString) -> std::unique_ptr<ResourceIfc>
+    const std::string &resourceString) -> std::unique_ptr<ResourceIfc>
 {
-  return std::make_unique<VISAResource>(
-      mLogger, resourceString, mResourceManager);
+  return VISAResource::create(mLogger, resourceString, mResourceManagerHandle);
 }

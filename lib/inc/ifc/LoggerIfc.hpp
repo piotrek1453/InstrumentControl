@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include <string_view>
+#include <string>
 
 enum class LogLevel : uint32_t
 {
@@ -17,6 +17,6 @@ public:
   virtual ~LoggerIfc() = default;
 
   virtual void setLoggingLevel(LogLevel level) = 0;
-  virtual void log(std::string_view message,
+  virtual void log(const std::string &message,
                    LogLevel level = LogLevel::Info) = 0;
 };

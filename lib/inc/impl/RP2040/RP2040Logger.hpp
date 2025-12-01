@@ -1,13 +1,13 @@
 #pragma once
 #include "ifc/LoggerIfc.hpp"
 #include <print>
-#include <string_view>
+#include <string>
 
 class RP2040Logger : public LoggerIfc
 {
 public:
   void log(
-      std::string_view message,
+      const std::string &message,
       LogLevel level = LogLevel::Info) override
   {
     switch (level)

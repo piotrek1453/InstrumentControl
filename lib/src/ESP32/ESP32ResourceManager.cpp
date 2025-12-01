@@ -18,7 +18,7 @@ auto ESP32ResourceManager::listAvailableResources() const
 }
 
 auto ESP32ResourceManager::openResource(
-    std::string_view resourceString) -> std::unique_ptr<ResourceIfc>
+    const std::string &resourceString) -> std::unique_ptr<ResourceIfc>
 {
   // TODO: Use VISA API to open; placeholder creates stub resource
   return std::make_unique<ESP32Resource>(logger_, resourceString);

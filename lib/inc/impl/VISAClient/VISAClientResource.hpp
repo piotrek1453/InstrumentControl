@@ -1,18 +1,18 @@
 #pragma once
 #include "ifc/LoggerIfc.hpp"
 #include "ifc/ResourceIfc.hpp"
-#include <string_view>
+#include <string>
 
 class VISAClientResource : public ResourceIfc
 {
 public:
   explicit VISAClientResource(LoggerIfc &logger,
-                              std::string_view resource_string);
+                              const std::string &resource_string);
   ~VISAClientResource() override = default;
 
-  auto write(std::string_view command) -> bool override;
+  auto write(const std::string &command) -> bool override;
   auto read() -> ReadResult override;
-  auto query(std::string_view command) -> ReadResult override;
+  auto query(const std::string &command) -> ReadResult override;
 
 private:
   LoggerIfc &logger_;

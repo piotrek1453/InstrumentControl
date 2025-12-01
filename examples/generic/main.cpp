@@ -50,13 +50,13 @@ auto main() -> int
                   resourcesLog,
                   resources.size()));
 
-  auto resource = manager.openResource(resources[0]);
-  // if (resource)
-  // {
-  //   resource->write("*IDN?");
-  //   resource->read();
-  //   resource->query("*IDN?");
-  // }
+  auto resource = manager.openResource(resources.back());
+  if (resource != nullptr)
+  {
+    resource->write("*IDN?");
+    resource->read();
+    resource->query("*IDN?");
+  }
 
   return 0;
 }

@@ -1,16 +1,16 @@
 #pragma once
 
-#include <string_view>
+#include <string>
 
 struct ReadResult
 {
   bool isOk = false;
-  std::string_view value;
+  std::string value;
 
   static auto success(
-      std::string_view view) -> ReadResult
+      const std::string &view) -> ReadResult
   {
-    return ReadResult{.isOk = true, .value = std::move(view)};
+    return ReadResult{.isOk = true, .value = view};
   }
 
   static auto failure() -> ReadResult
@@ -24,7 +24,7 @@ class ResourceIfc
 public:
   virtual ~ResourceIfc() = default;
 
-  virtual auto write(std::string_view command) -> bool = 0;
+  virtual auto write(const std::string &command) -> bool = 0;
   virtual auto read() -> ReadResult = 0;
-  virtual auto query(std::string_view command) -> ReadResult = 0;
+  virtual auto query(const std::string &command) -> ReadResult = 0;
 };

@@ -18,7 +18,7 @@ auto VISAClientResourceManager::listAvailableResources() const
 }
 
 auto VISAClientResourceManager::openResource(
-    std::string_view resourceString) -> std::unique_ptr<ResourceIfc>
+    const std::string &resourceString) -> std::unique_ptr<ResourceIfc>
 {
   // TODO: Use VISA API to open; placeholder creates stub resource
   return std::make_unique<VISAClientResource>(logger_, resourceString);

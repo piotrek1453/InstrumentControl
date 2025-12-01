@@ -2,11 +2,10 @@
 #include "ifc/ResourceIfc.hpp"
 #include <fmt/core.h>
 #include <string>
-#include <string_view>
 
 VISAClientResource::VISAClientResource(
     LoggerIfc &logger,
-    std::string_view resource_string)
+    const std::string &resource_string)
     : logger_(logger)
 {
   logger_.log(fmt::format("Created VISAClientResource with resource string {}",
@@ -14,10 +13,10 @@ VISAClientResource::VISAClientResource(
 }
 
 auto VISAClientResource::write(
-    std::string_view command) -> bool
+    const std::string &command) -> bool
 {
   // TODO: Implement write via VISA; placeholder logs
-  logger_.log("VISAClientResource write: " + std::string(command));
+  logger_.log("VISAClientResource write: " + command);
   return true;
 }
 
@@ -28,7 +27,7 @@ auto VISAClientResource::read() -> ReadResult
 }
 
 auto VISAClientResource::query(
-    std::string_view command) -> ReadResult
+    const std::string &command) -> ReadResult
 {
   // Simple placeholder: write then read
   if (!write(command))

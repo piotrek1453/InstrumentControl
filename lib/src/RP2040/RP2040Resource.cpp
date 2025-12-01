@@ -2,7 +2,7 @@
 
 RP2040Resource::RP2040Resource(
     LoggerIfc &logger,
-    std::string_view resource_string)
+    const std::string &resource_string)
     : logger_(logger)
 {
   // Avoid std::string concatenation that requires heap on MCU
@@ -11,7 +11,7 @@ RP2040Resource::RP2040Resource(
 }
 
 auto RP2040Resource::write(
-    std::string_view command) -> bool
+    const std::string &command) -> bool
 {
   // TODO: Write via UART/I2C/SPI
   logger_.log("RP2040Resource write");
@@ -26,7 +26,7 @@ auto RP2040Resource::read() -> ReadResult
 }
 
 auto RP2040Resource::query(
-    std::string_view command) -> ReadResult
+    const std::string &command) -> ReadResult
 {
   if (!write(command))
   {

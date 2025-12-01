@@ -18,7 +18,7 @@ auto RP2040ResourceManager::listAvailableResources() const
 }
 
 auto RP2040ResourceManager::openResource(
-    std::string_view resourceString) -> std::unique_ptr<ResourceIfc>
+    const std::string &resourceString) -> std::unique_ptr<ResourceIfc>
 {
   // TODO: Use VISA API to open; placeholder creates stub resource
   return std::make_unique<RP2040Resource>(logger_, resourceString);

@@ -2,7 +2,7 @@
 #include "ifc/LoggerIfc.hpp"
 #include "ifc/ResourceManagerIfc.hpp"
 #include <memory>
-#include <string_view>
+#include <string>
 #include <visa.h>
 
 class VISAResourceManager : public ResourceManagerIfc
@@ -13,10 +13,10 @@ public:
 
   [[nodiscard]] auto listAvailableResources() const
       -> std::vector<std::string> override;
-  auto openResource(std::string_view resourceString)
+  auto openResource(const std::string &resourceString)
       -> std::unique_ptr<ResourceIfc> override;
 
 private:
-  ViSession mResourceManager;
+  ViSession mResourceManagerHandle;
   LoggerIfc &mLogger;
 };

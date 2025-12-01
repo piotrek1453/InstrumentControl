@@ -4,7 +4,7 @@
 #include <memory>
 #include <spdlog/common.h>
 #include <spdlog/logger.h>
-#include <string_view>
+#include <string>
 #include <unordered_map>
 
 static const std::unordered_map<LogLevel, spdlog::level::level_enum>
@@ -24,7 +24,7 @@ public:
   }
 
   void log(
-      std::string_view message,
+      const std::string &message,
       LogLevel level = LogLevel::Info) override
   {
     mLogger->log(logLevelMap.at(level), message);

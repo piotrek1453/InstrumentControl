@@ -4,20 +4,37 @@
 #include <array>
 #include <fmt/core.h>
 #include <fmt/format.h>
-#include <string_view>
+#include <memory>
+#include <string>
 #include <visa.h>
 #include <visatype.h>
 
+auto VISAResource::create(
+    LoggerIfc &logger,
+    std::string resourceString,
+    ViSession resourceManagerHandle) -> std::unique_ptr<VISAResource>
+{
+  auto resourcePointer = std::unique_ptr<VISAResource>(
+      new VISAResource(logger, resourceString, resourceManagerHandle));
+
+  if (!resourcePointer->mIsOpen)
+  {
+    return nullptr;
+  }
+
+  return resourcePointer;
+}
+
 VISAResource::VISAResource(
     LoggerIfc &logger,
-    std::string_view resourceString,
+    std::string resourceString,
     ViSession resourceManagerHandle) noexcept
     : logger_(logger),
-      mResourceString(resourceString),
+      mResourceString(std::move(resourceString)),
       mResourceManagerHandle(resourceManagerHandle)
 {
   auto status = viOpen(mResourceManagerHandle,
-                       const_cast<ViRsrc>(mResourceString.data()),
+                       const_cast<ViRsrc>(mResourceString.c_str()),
                        INSTRUMENT_ACCESS_MODE,
                        INSTRUMENT_TIMEOUT_MS,
                        &mInstrumentSessionHandle);
@@ -45,7 +62,7 @@ VISAResource::VISAResource(
 }
 
 auto VISAResource::write(
-    std::string_view command) -> bool
+    const std::string &command) -> bool
 {
   auto status =
       viWrite(mInstrumentSessionHandle,
@@ -60,7 +77,7 @@ auto VISAResource::write(
     logger_.log(
         fmt::format(
             "Error writing to instrument\nResource string: {}\nError: {} - {}",
-            mResourceString.data(),
+            mResourceString,
             statusDescription,
             statusBuffer.data()),
         LogLevel::Error);
@@ -69,8 +86,8 @@ auto VISAResource::write(
   logger_.log(
       fmt::format(
           "Write to VISAResource succesful\nResource string: {}\nCommand: {}",
-          mResourceString.data(),
-          command.data()),
+          mResourceString,
+          command),
       LogLevel::Trace);
   return true;
 }
@@ -89,7 +106,7 @@ auto VISAResource::read() -> ReadResult
         viStatusDesc(mResourceManagerHandle, status, statusBuffer.data());
     logger_.log(fmt::format("Error reading from instrument\nResource string: "
                             "{}\nError: {} - {}",
-                            mResourceString.data(),
+                            mResourceString,
                             statusDescription,
                             statusBuffer.data()),
                 LogLevel::Error);
@@ -103,11 +120,11 @@ auto VISAResource::read() -> ReadResult
           std::string(reinterpret_cast<char *>(readBuffer.data()), mIOBytes)),
       LogLevel::Trace);
   return ReadResult::success(
-      std::string_view(reinterpret_cast<char *>(readBuffer.data())));
+      std::string(reinterpret_cast<char *>(readBuffer.data()), mIOBytes));
 }
 
 auto VISAResource::query(
-    std::string_view command) -> ReadResult
+    const std::string &command) -> ReadResult
 {
   if (!write(command))
   {
