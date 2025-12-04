@@ -50,7 +50,8 @@ auto main() -> int
                   resourcesLog,
                   resources.size()));
 
-  auto resource = manager.openResource(resources.back());
+  auto resource =
+      manager.openResource("TCPIP::10.153.1.20::INSTR"); // example IP string
   if (resource != nullptr)
   {
     resource->write("*IDN?");
