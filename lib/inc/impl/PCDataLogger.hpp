@@ -9,8 +9,11 @@ class PCDataLogger : DataLoggerIfc
 {
 public:
   explicit PCDataLogger(
-      std::filesystem::path csvPath) noexcept
-      : mCsvFileHandle(csvPath)
+      size_t bufferSize = 0,
+      std::filesystem::path csvPath = std::filesystem::temp_directory_path() /
+                                      "example_data.csv") noexcept
+      : mBufferSize(bufferSize),
+        mCsvFileHandle(csvPath)
   {
   }
 
@@ -29,11 +32,15 @@ public:
     if (mCsvFileHandle.is_open())
     {
       mCsvFileHandle << ++mCurrentDataIndex << ',' << data << '\n';
-      mCsvFileHandle.flush();
+      if (mCurrentDataIndex >= mBufferSize - 1)
+      {
+        mCsvFileHandle.flush();
+      }
     }
   }
 
 private:
   size_t mCurrentDataIndex{0};
+  size_t mBufferSize{0};
   std::ofstream mCsvFileHandle;
 };
