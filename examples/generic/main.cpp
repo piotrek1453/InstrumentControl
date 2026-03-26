@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <fmt/format.h>
 #include <string>
+#include <string_view>
 #ifdef IMPLEMENTATION_VISA
 #include "VISA/inc/ConsoleLogger.hpp"
 #include "VISA/inc/PCDataLogger.hpp"
@@ -10,7 +11,7 @@ using Logger = ConsoleLogger;
 using DataLogger = PCDataLogger;
 using ResourceManager = VISAResourceManager;
 
-#elif defined(IMPLEMENTATION_VISAClient)
+#elifdef IMPLEMENTATION_VISAClient
 #include "VISA/inc/ConsoleLogger.hpp"
 #include "VISA/inc/PCDataLogger.hpp"
 #include "VISAClient/inc/VISAClientResourceManager.hpp"
@@ -18,13 +19,13 @@ using Logger = ConsoleLogger;
 using DataLogger = PCDataLogger;
 using ResourceManager = VISAClientResourceManager;
 
-#elif defined(IMPLEMENTATION_ESP32)
+#elifdef IMPLEMENTATION_ESP32
 #include "ESP32/inc/ESP32Logger.hpp"
 #include "ESP32/inc/ESP32ResourceManager.hpp"
 using Logger = ESP32Logger;
 using ResourceManager = ESP32ResourceManager;
 
-#elif defined(IMPLEMENTATION_RP2040)
+#elifdef IMPLEMENTATION_RP2040
 #include "RP2040/inc/RP2040Logger.hpp"
 #include "RP2040/inc/RP2040ResourceManager.hpp"
 using Logger = RP2040Logger;
@@ -72,8 +73,8 @@ auto main() -> int
     {
       // TODO: make this more robust, also differentating between write and
       // query doesn't work, only writes occur now
-      auto last_char_idx = (sizeof(*command) / sizeof(command[0])) - 1;
-      if (command[last_char_idx] == '?')
+      const auto commandView = std::string_view(command);
+      if (!commandView.empty() && commandView.back() == '?')
       {
 #if defined(IMPLEMENTATION_VISA) || defined(IMPLEMENTATION_VISAClient)
         dataLogger.log("query," + std::string(command) + "," +

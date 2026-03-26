@@ -12,6 +12,26 @@ enum class LogLevel : uint32_t
   Trace
 };
 
+constexpr auto logLevelToString(
+    LogLevel level) -> const char *
+{
+  switch (level)
+  {
+  case LogLevel::Trace:
+    return "TRACE";
+  case LogLevel::Debug:
+    return "DEBUG";
+  case LogLevel::Error:
+    return "ERROR";
+  case LogLevel::Warn:
+    return "WARN";
+  case LogLevel::Info:
+    return "INFO";
+  default:
+    return "UNKNOWN LOG LEVEL";
+  }
+}
+
 class LoggerIfc
 {
 public:

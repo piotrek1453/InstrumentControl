@@ -8,7 +8,7 @@ BUILD_EXAMPLES ?= OFF             # ON to build example app(s)
 GENERATOR ?= Ninja                # CMake generator
 TOOLCHAIN ?=                      # Optional: path to CMake toolchain file (MCU)
 CMAKE_ARGS ?=                     # Extra CMake -D flags, e.g. -DPICO_SDK_PATH=...
-SRCS := $(shell find examples lib -name '*.cpp' -o -name '*.hpp' -o -name '*.h')
+SRCS := $(shell find examples lib -type f \( -name '*.cpp' -o -name '*.hpp' -o -name '*.h' \) -not -path '*/build/*')
 
 .PHONY: build clean init_venv help conan pre_build build-visa build-visaclient build-esp32 build-rp2040 run-example
 
@@ -52,7 +52,11 @@ build: pre_build
 	cd $(BUILD_DIR) && \
 	cmake -G$(GENERATOR) \
 	  -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) \
-	  -DIMPLEMENTATION=$(IMPLEMENTATION) \
+	  -DEXAMPLE_BACKEND=$(IMPLEMENTATION) \
+	  -DINSTRUMENTCONTROL_BUILD_VISA=$(if $(filter VISA,$(IMPLEMENTATION)),ON,OFF) \
+	  -DINSTRUMENTCONTROL_BUILD_VISACLIENT=$(if $(filter VISAClient,$(IMPLEMENTATION)),ON,OFF) \
+	  -DINSTRUMENTCONTROL_BUILD_ESP32=$(if $(filter ESP32,$(IMPLEMENTATION)),ON,OFF) \
+	  -DINSTRUMENTCONTROL_BUILD_RP2040=$(if $(filter RP2040,$(IMPLEMENTATION)),ON,OFF) \
 	  -DBUILD_EXAMPLES=$(BUILD_EXAMPLES) \
 	  $(if $(TOOLCHAIN),-DCMAKE_TOOLCHAIN_FILE=$(TOOLCHAIN),) \
 	  $(CMAKE_ARGS) \
