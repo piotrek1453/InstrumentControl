@@ -1,25 +1,25 @@
-#include "impl/RP2040/RP2040ResourceManager.hpp"
-#include "impl/RP2040/RP2040Resource.hpp"
+#include "../inc/VISAClientResourceManager.hpp"
+#include "../inc/VISAClientResource.hpp"
 #include <memory>
 #include <string>
 #include <vector>
 
-RP2040ResourceManager::RP2040ResourceManager(
+VISAClientResourceManager::VISAClientResourceManager(
     LoggerIfc &logger)
     : logger_(logger)
 {
 }
 
-auto RP2040ResourceManager::listAvailableResources() const
+auto VISAClientResourceManager::listAvailableResources() const
     -> std::vector<std::string>
 {
   // TODO: Implement VISA enumeration; placeholder empty
   return {};
 }
 
-auto RP2040ResourceManager::openResource(
+auto VISAClientResourceManager::openResource(
     const std::string &resourceString) -> std::unique_ptr<ResourceIfc>
 {
   // TODO: Use VISA API to open; placeholder creates stub resource
-  return std::make_unique<RP2040Resource>(logger_, resourceString);
+  return std::make_unique<VISAClientResource>(logger_, resourceString);
 }

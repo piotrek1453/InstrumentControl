@@ -9,4 +9,4 @@ set_property(CACHE IMPLEMENTATION PROPERTY STRINGS VISA VISAClient ESP32 RP2040)
 message(STATUS "Selected implementation: ${IMPLEMENTATION}")
 
 # Each implementation owns its own CMakeLists; avoid big conditionals here.
-add_subdirectory(src/${IMPLEMENTATION})
+add_subdirectory(${IMPLEMENTATION}/src)

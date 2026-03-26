@@ -3,30 +3,30 @@
 #include <fmt/format.h>
 #include <string>
 #ifdef IMPLEMENTATION_VISA
-#include "impl/ConsoleLogger.hpp"
-#include "impl/PCDataLogger.hpp"
-#include "impl/VISA/VISAResourceManager.hpp"
+#include "VISA/inc/ConsoleLogger.hpp"
+#include "VISA/inc/PCDataLogger.hpp"
+#include "VISA/inc/VISAResourceManager.hpp"
 using Logger = ConsoleLogger;
 using DataLogger = PCDataLogger;
 using ResourceManager = VISAResourceManager;
 
-#elifdef IMPLEMENTATION_VISAClient
-#include "impl/ConsoleLogger.hpp"
-#include "impl/PCDataLogger.hpp"
-#include "impl/VISAClient/VISAClientResourceManager.hpp"
+#elif defined(IMPLEMENTATION_VISAClient)
+#include "VISA/inc/ConsoleLogger.hpp"
+#include "VISA/inc/PCDataLogger.hpp"
+#include "VISAClient/inc/VISAClientResourceManager.hpp"
 using Logger = ConsoleLogger;
 using DataLogger = PCDataLogger;
 using ResourceManager = VISAClientResourceManager;
 
-#elifdef IMPLEMENTATION_ESP32
-#include "impl/ESP32/ESP32Logger.hpp"
-#include "impl/ESP32/ESP32ResourceManager.hpp"
+#elif defined(IMPLEMENTATION_ESP32)
+#include "ESP32/inc/ESP32Logger.hpp"
+#include "ESP32/inc/ESP32ResourceManager.hpp"
 using Logger = ESP32Logger;
 using ResourceManager = ESP32ResourceManager;
 
-#elifdef IMPLEMENTATION_RP2040
-#include "impl/RP2040/RP2040Logger.hpp"
-#include "impl/RP2040/RP2040ResourceManager.hpp"
+#elif defined(IMPLEMENTATION_RP2040)
+#include "RP2040/inc/RP2040Logger.hpp"
+#include "RP2040/inc/RP2040ResourceManager.hpp"
 using Logger = RP2040Logger;
 using ResourceManager = RP2040ResourceManager;
 
@@ -44,8 +44,10 @@ auto main() -> int
   Logger logger;
   logger.setLoggingLevel(LogLevel::Trace);
 
+#if defined(IMPLEMENTATION_VISA) || defined(IMPLEMENTATION_VISAClient)
   // create datalogger
   DataLogger dataLogger(DATALOGGER_BUFFER_SIZE);
+#endif
 
   ResourceManager manager(logger);
 
@@ -73,12 +75,18 @@ auto main() -> int
       auto last_char_idx = (sizeof(*command) / sizeof(command[0])) - 1;
       if (command[last_char_idx] == '?')
       {
+#if defined(IMPLEMENTATION_VISA) || defined(IMPLEMENTATION_VISAClient)
         dataLogger.log("query," + std::string(command) + "," +
                        resource->query(command).value);
+#else
+        static_cast<void>(resource->query(command));
+#endif
       }
       else
       {
+#if defined(IMPLEMENTATION_VISA) || defined(IMPLEMENTATION_VISAClient)
         dataLogger.log("write," + std::string(command) + "," + '-');
+#endif
         resource->write(command);
       }
     }

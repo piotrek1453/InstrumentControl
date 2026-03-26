@@ -1,4 +1,4 @@
-#include "impl/RP2040/RP2040Resource.hpp"
+#include "../inc/RP2040Resource.hpp"
 
 RP2040Resource::RP2040Resource(
     LoggerIfc &logger,

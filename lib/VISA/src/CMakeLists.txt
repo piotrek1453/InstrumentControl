@@ -5,8 +5,9 @@ file(GLOB VISA_SOURCES "${CMAKE_CURRENT_LIST_DIR}/*.cpp")
 
 add_library(InstrumentControlLib ${VISA_SOURCES})
 
-target_include_directories(InstrumentControlLib
-                           PUBLIC "${CMAKE_CURRENT_LIST_DIR}/../../inc")
+target_include_directories(
+  InstrumentControlLib PUBLIC "${CMAKE_CURRENT_LIST_DIR}/../inc"
+                              "${CMAKE_CURRENT_LIST_DIR}/../..")
 
 # Export macro for clients (examples)
 target_compile_definitions(InstrumentControlLib PUBLIC IMPLEMENTATION_VISA)

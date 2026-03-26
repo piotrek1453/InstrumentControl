@@ -1,0 +1,10 @@
+Checks: >-
+  modernize-*,
+  readability-*,
+  bugprone-*,
+  concurrency-*,
+  thread-safety-*
+
+WarningsAsErrors: ""
+HeaderFilterRegex: ".*"
+FormatStyle: none

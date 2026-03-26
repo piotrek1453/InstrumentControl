@@ -5,8 +5,9 @@ file(GLOB SRC_FILES "${CMAKE_CURRENT_LIST_DIR}/*.cpp")
 
 add_library(InstrumentControlLib ${SRC_FILES})
 
-target_include_directories(InstrumentControlLib
-                           PUBLIC "${CMAKE_CURRENT_LIST_DIR}/../../inc")
+target_include_directories(
+  InstrumentControlLib PUBLIC "${CMAKE_CURRENT_LIST_DIR}/../inc"
+                              "${CMAKE_CURRENT_LIST_DIR}/../..")
 
 target_compile_definitions(InstrumentControlLib
                            PUBLIC IMPLEMENTATION_VISAClient)

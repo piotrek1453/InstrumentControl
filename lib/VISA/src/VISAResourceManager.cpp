@@ -1,6 +1,6 @@
-#include "impl/VISA/VISAResourceManager.hpp"
+#include "../inc/VISAResourceManager.hpp"
+#include "../inc/VISAResource.hpp"
 #include "ifc/LoggerIfc.hpp"
-#include "impl/VISA/VISAResource.hpp"
 #include <array>
 #include <fmt/core.h>
 #include <fmt/format.h>

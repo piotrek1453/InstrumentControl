@@ -1,25 +1,25 @@
-#include "impl/VISAClient/VISAClientResourceManager.hpp"
-#include "impl/VISAClient/VISAClientResource.hpp"
+#include "../inc/ESP32ResourceManager.hpp"
+#include "../inc/ESP32Resource.hpp"
 #include <memory>
 #include <string>
 #include <vector>
 
-VISAClientResourceManager::VISAClientResourceManager(
+ESP32ResourceManager::ESP32ResourceManager(
     LoggerIfc &logger)
     : logger_(logger)
 {
 }
 
-auto VISAClientResourceManager::listAvailableResources() const
+auto ESP32ResourceManager::listAvailableResources() const
     -> std::vector<std::string>
 {
   // TODO: Implement VISA enumeration; placeholder empty
   return {};
 }
 
-auto VISAClientResourceManager::openResource(
+auto ESP32ResourceManager::openResource(
     const std::string &resourceString) -> std::unique_ptr<ResourceIfc>
 {
   // TODO: Use VISA API to open; placeholder creates stub resource
-  return std::make_unique<VISAClientResource>(logger_, resourceString);
+  return std::make_unique<ESP32Resource>(logger_, resourceString);
 }

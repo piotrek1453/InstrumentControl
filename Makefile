@@ -67,10 +67,10 @@ build-visaclient:
 	$(MAKE) build IMPLEMENTATION=VISAClient USE_CONAN=ON BUILD_EXAMPLES=ON
 
 build-esp32:
-	$(MAKE) build IMPLEMENTATION=ESP32 USE_CONAN=OFF BUILD_EXAMPLES=ON
+	$(MAKE) build IMPLEMENTATION=ESP32 USE_CONAN=OFF BUILD_EXAMPLES=OFF
 
 build-rp2040:
-	$(MAKE) build IMPLEMENTATION=RP2040 USE_CONAN=OFF BUILD_EXAMPLES=ON
+	$(MAKE) build IMPLEMENTATION=RP2040 USE_CONAN=OFF BUILD_EXAMPLES=OFF
 
 # Run example (only meaningful for PC impls)
 run-example:
@@ -110,7 +110,7 @@ format-check:
 # ----------------------------------------
 tidy-check:
 	@echo "Running clang-tidy..."
-	@run-clang-tidy -p build -quiet
+	@run-clang-tidy -p $(BUILD_DIR) -quiet
 	@echo "clang-tidy passed."
 
 # ----------------------------------------

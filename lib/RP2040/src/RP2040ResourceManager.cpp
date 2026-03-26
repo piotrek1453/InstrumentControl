@@ -1,25 +1,25 @@
-#include "impl/ESP32/ESP32ResourceManager.hpp"
-#include "impl/ESP32/ESP32Resource.hpp"
+#include "../inc/RP2040ResourceManager.hpp"
+#include "../inc/RP2040Resource.hpp"
 #include <memory>
 #include <string>
 #include <vector>
 
-ESP32ResourceManager::ESP32ResourceManager(
+RP2040ResourceManager::RP2040ResourceManager(
     LoggerIfc &logger)
     : logger_(logger)
 {
 }
 
-auto ESP32ResourceManager::listAvailableResources() const
+auto RP2040ResourceManager::listAvailableResources() const
     -> std::vector<std::string>
 {
   // TODO: Implement VISA enumeration; placeholder empty
   return {};
 }
 
-auto ESP32ResourceManager::openResource(
+auto RP2040ResourceManager::openResource(
     const std::string &resourceString) -> std::unique_ptr<ResourceIfc>
 {
   // TODO: Use VISA API to open; placeholder creates stub resource
-  return std::make_unique<ESP32Resource>(logger_, resourceString);
+  return std::make_unique<RP2040Resource>(logger_, resourceString);
 }

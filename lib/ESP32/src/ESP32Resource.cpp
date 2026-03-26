@@ -1,4 +1,4 @@
-#include "impl/ESP32/ESP32Resource.hpp"
+#include "../inc/ESP32Resource.hpp"
 
 ESP32Resource::ESP32Resource(
     LoggerIfc &logger,

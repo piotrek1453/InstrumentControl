@@ -1,4 +1,4 @@
-#include "impl/VISAClient/VISAClientResource.hpp"
+#include "../inc/VISAClientResource.hpp"
 #include "ifc/ResourceIfc.hpp"
 #include <fmt/core.h>
 #include <string>

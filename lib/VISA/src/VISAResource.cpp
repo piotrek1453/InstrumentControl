@@ -1,4 +1,4 @@
-#include "impl/VISA/VISAResource.hpp"
+#include "../inc/VISAResource.hpp"
 #include "ifc/LoggerIfc.hpp"
 #include "ifc/ResourceIfc.hpp"
 #include <array>
