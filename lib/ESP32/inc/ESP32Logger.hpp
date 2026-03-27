@@ -1,6 +1,6 @@
 #pragma once
 #include "../../ifc/LoggerIfc.hpp"
-#include <print>
+#include <esp_log.h>
 #include <source_location>
 #include <string>
 
@@ -10,7 +10,7 @@ public:
   void setLoggingLevel(
       LogLevel level) override
   {
-    mMinLogLevel = level;
+    mLogLevel = level;
   }
 
   void log(
@@ -19,40 +19,51 @@ public:
       const std::source_location &location =
           std::source_location::current()) override
   {
-    static_cast<void>(location);
-    if (static_cast<uint32_t>(level) < static_cast<uint32_t>(mMinLogLevel))
+    if (static_cast<uint32_t>(level) > static_cast<uint32_t>(mLogLevel))
     {
       return;
     }
 
-    switch (level)
-    {
-    case LogLevel::Info:
-      std::println("INFO: {}", message);
-      break;
+    const auto espLevel = toEspLogLevel(level);
 
-    case LogLevel::Warn:
-      std::println("WARN: {}", message);
-      break;
-
-    case LogLevel::Error:
-      std::println("ERROR: {}", message);
-      break;
-
-    case LogLevel::Debug:
-      std::println("DEBUG: {}", message);
-      break;
-
-    case LogLevel::Trace:
-      std::println("TRACE: {}", message);
-      break;
-
-    default:
-      std::println("UNKNOWN LOG LEVEL: {}", message);
-      break;
-    }
+// print full info in debug mode otherwise just log level and message
+#if defined(NDEBUG)
+    static_cast<void>(location);
+    esp_log_write(
+        espLevel, kTag, "%s : %s\n", logLevelToString(level), message.c_str());
+#else
+    esp_log_write(espLevel,
+                  kTag,
+                  "[%s : %lu : %s] %s : %s\n",
+                  location.file_name(),
+                  static_cast<unsigned long>(location.line()),
+                  location.function_name(),
+                  logLevelToString(level),
+                  message.c_str());
+#endif
   }
 
 private:
-  LogLevel mMinLogLevel{LogLevel::Info};
+  static constexpr auto toEspLogLevel(
+      LogLevel level) -> esp_log_level_t
+  {
+    switch (level)
+    {
+    case LogLevel::Trace:
+      return ESP_LOG_VERBOSE;
+    case LogLevel::Debug:
+      return ESP_LOG_DEBUG;
+    case LogLevel::Info:
+      return ESP_LOG_INFO;
+    case LogLevel::Warn:
+      return ESP_LOG_WARN;
+    case LogLevel::Error:
+      return ESP_LOG_ERROR;
+    default:
+      return ESP_LOG_INFO;
+    }
+  }
+
+  static constexpr const char *kTag = "InstrumentControl";
+  LogLevel mLogLevel{LogLevel::Info};
 };

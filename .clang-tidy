@@ -1,5 +1,4 @@
 Checks: >-
-  modernize-*,
   readability-*,
   bugprone-*,
   concurrency-*,
