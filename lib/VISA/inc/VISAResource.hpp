@@ -31,7 +31,7 @@ private:
                         ViSession resourceManagerHandle) noexcept;
 
   LoggerIfc &logger_;
-  std::string mResourceString;
+  const std::string mResourceString;
   ViSession mResourceManagerHandle, mInstrumentSessionHandle;
   std::atomic<bool> mIsOpen{false};
   ViUInt32 mIOBytes{};

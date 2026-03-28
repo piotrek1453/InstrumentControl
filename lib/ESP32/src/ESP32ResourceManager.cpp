@@ -17,9 +17,10 @@ auto ESP32ResourceManager::listAvailableResources() const
   return {};
 }
 
+// assuming resourceString is in IP:port format
+// i.e. "192.168.1.1:80"
 auto ESP32ResourceManager::openResource(
     const std::string &resourceString) -> std::unique_ptr<ResourceIfc>
 {
-  // TODO: Use VISA API to open; placeholder creates stub resource
-  return std::make_unique<ESP32Resource>(logger_, resourceString);
+  return ESP32Resource::create(logger_, resourceString);
 }
