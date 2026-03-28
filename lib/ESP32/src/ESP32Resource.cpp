@@ -11,8 +11,6 @@
 
 namespace
 {
-// helper function so that initialization of
-// sockaddr_in can be initialized at construction
 auto makeDestAddr(
     const std::string &resourceIp,
     uint16_t resourcePort) -> sockaddr_in
@@ -25,14 +23,12 @@ auto makeDestAddr(
 }
 } // namespace
 
-// assuming resourceString is in IP:port format
-// i.e. "192.168.1.1:80"
+ESP32Resource::~ESP32Resource() { close(mSock); }
+
 auto ESP32Resource::create(
     LoggerIfc &logger,
     std::string resourceString) -> std::unique_ptr<ESP32Resource>
 {
-  // split IP:port pair into separate variables
-  // needed to keep compatibility with the interface
   std::string resourceIP;
   uint16_t resourcePort;
 
@@ -90,7 +86,6 @@ auto ESP32Resource::connect() -> void
   logger_.log("Setting up communication with server on " +
               getFormattedIpPortPair());
 
-  // socket creation
   mSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (mSock < 0)
   {
@@ -101,7 +96,6 @@ auto ESP32Resource::connect() -> void
   }
   logger_.log("Socket created");
 
-  // connecting to server
   logger_.log("Connecting to server on " + getFormattedIpPortPair());
   if (lwip_connect(mSock, (struct sockaddr *)&mDestAddr, sizeof(mDestAddr)) !=
       0)
@@ -118,10 +112,15 @@ auto ESP32Resource::connect() -> void
 
 auto ESP32Resource::ensureConnected() -> void
 {
-  while (!mIsOpen)
+  if (!mIsOpen)
   {
-    logger_.log("Not connected to server, trying", LogLevel::Warn);
-    connect();
+    for (uint8_t attempt = 0; attempt < MAX_CONNECT_RETRIES; ++attempt)
+    {
+      logger_.log("Not connected to server, attempt " +
+                      std::to_string(attempt + 1),
+                  LogLevel::Warn);
+      connect();
+    }
   }
 }
 
@@ -134,7 +133,6 @@ auto ESP32Resource::getFormattedIpPortPair() const -> std::string
 auto ESP32Resource::write(
     const std::string &command) -> bool
 {
-  // TODO: Write via UART/I2C/SPI
   logger_.log("ESP32Resource write");
 
   ensureConnected();
@@ -145,7 +143,6 @@ auto ESP32Resource::write(
 
 auto ESP32Resource::read() -> ReadResult
 {
-  // TODO: Read via UART/I2C/SPI
   ensureConnected();
 
   return ReadResult::success("");

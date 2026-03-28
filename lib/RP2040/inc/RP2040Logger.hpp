@@ -7,12 +7,21 @@
 class RP2040Logger : public LoggerIfc
 {
 public:
+  /**
+   * Sets the maximum emitted log level.
+   */
   void setLoggingLevel(
       LogLevel level) override
   {
     mLogLevel = level;
   }
 
+  /**
+   * Emits log messages via stdio.
+   *
+   * In release builds only level and message are emitted. In debug builds
+   * source location data is included.
+   */
   void log(
       const std::string &message,
       LogLevel level = LogLevel::Info,
@@ -23,8 +32,6 @@ public:
     {
       return;
     }
-
-// print full info in debug mode otherwise just log level and message
 #if defined(NDEBUG)
     static_cast<void>(location);
     printf("%s : %s\n", logLevelToString(level), message.c_str());

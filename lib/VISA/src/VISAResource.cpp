@@ -9,6 +9,12 @@
 #include <visa.h>
 #include <visatype.h>
 
+VISAResource::~VISAResource()
+{
+  viClear(mInstrumentSessionHandle);
+  viClose(mInstrumentSessionHandle);
+}
+
 auto VISAResource::create(
     LoggerIfc &logger,
     std::string resourceString,

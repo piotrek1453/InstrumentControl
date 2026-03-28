@@ -14,7 +14,6 @@ VISAResourceManager::VISAResourceManager(
     LoggerIfc &logger) noexcept
     : mLogger(logger)
 {
-  // open RM and log status
   auto status = viOpenDefaultRM(&mResourceManagerHandle);
   mLogger.log(fmt::format(
       "Opening VISA resource manager finished with status {}", status));
@@ -22,7 +21,6 @@ VISAResourceManager::VISAResourceManager(
 
 VISAResourceManager::~VISAResourceManager()
 {
-  // clean up the buffer, close the resource manager
   viClear(mResourceManagerHandle);
   viClose(mResourceManagerHandle);
 }
@@ -30,7 +28,6 @@ VISAResourceManager::~VISAResourceManager()
 auto VISAResourceManager::listAvailableResources() const
     -> std::vector<std::string>
 {
-  // define needed vars
   ViFindList findList{};
   ViUInt32 numInstrs{};
   std::array<char, VI_FIND_BUFLEN> instrDescriptor{};
@@ -48,8 +45,6 @@ auto VISAResourceManager::listAvailableResources() const
     return {};
   }
 
-  // iterate until all resource enumerated, append resource descriptors as
-  // strings to availableResources
   do
   {
     availableResources.emplace_back(instrDescriptor.data());
@@ -62,8 +57,6 @@ auto VISAResourceManager::listAvailableResources() const
                     numInstrs - 1),
         LogLevel::Trace);
 
-    // VISA doesn't clean the buffer: make sure it's empty not to get
-    // garbage in any of the resource strings
     instrDescriptor = {};
     status = viFindNext(findList, instrDescriptor.data());
   } while (--numInstrs > 0);
