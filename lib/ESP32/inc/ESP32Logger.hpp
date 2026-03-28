@@ -7,21 +7,12 @@
 class ESP32Logger : public LoggerIfc
 {
 public:
-  /**
-   * Sets the maximum emitted log level.
-   */
   void setLoggingLevel(
       LogLevel level) override
   {
     mLogLevel = level;
   }
 
-  /**
-   * Emits ESP-IDF logs.
-   *
-   * In release builds only level and message are emitted. In debug builds
-   * source location data is included.
-   */
   void log(
       const std::string &message,
       LogLevel level = LogLevel::Info,
@@ -34,6 +25,8 @@ public:
     }
 
     const auto espLevel = toEspLogLevel(level);
+
+// print full info in debug mode otherwise just log level and message
 #if defined(NDEBUG)
     static_cast<void>(location);
     esp_log_write(

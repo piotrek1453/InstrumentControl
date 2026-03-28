@@ -13,9 +13,12 @@ ESP32ResourceManager::ESP32ResourceManager(
 auto ESP32ResourceManager::listAvailableResources() const
     -> std::vector<std::string>
 {
+  // TODO: Implement VISA enumeration; placeholder empty
   return {};
 }
 
+// assuming resourceString is in IP:port format
+// i.e. "192.168.1.1:80"
 auto ESP32ResourceManager::openResource(
     const std::string &resourceString) -> std::unique_ptr<ResourceIfc>
 {

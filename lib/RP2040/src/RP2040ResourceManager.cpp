@@ -13,11 +13,13 @@ RP2040ResourceManager::RP2040ResourceManager(
 auto RP2040ResourceManager::listAvailableResources() const
     -> std::vector<std::string>
 {
+  // TODO: Implement VISA enumeration; placeholder empty
   return {};
 }
 
 auto RP2040ResourceManager::openResource(
     const std::string &resourceString) -> std::unique_ptr<ResourceIfc>
 {
+  // TODO: Use VISA API to open; placeholder creates stub resource
   return std::make_unique<RP2040Resource>(logger_, resourceString);
 }

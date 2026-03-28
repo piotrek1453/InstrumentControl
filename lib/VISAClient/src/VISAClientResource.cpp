@@ -15,18 +15,21 @@ VISAClientResource::VISAClientResource(
 auto VISAClientResource::write(
     const std::string &command) -> bool
 {
+  // TODO: Implement write via VISA; placeholder logs
   logger_.log("VISAClientResource write: " + command);
   return true;
 }
 
 auto VISAClientResource::read() -> ReadResult
 {
+  // TODO: Implement read; placeholder returns empty success
   return ReadResult::success("");
 }
 
 auto VISAClientResource::query(
     const std::string &command) -> ReadResult
 {
+  // Simple placeholder: write then read
   if (!write(command))
   {
     return ReadResult::failure();
