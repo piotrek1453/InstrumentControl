@@ -11,7 +11,7 @@ public:
   ~VISAClientResourceManager() override = default;
 
   [[nodiscard]] auto listAvailableResources() const
-      -> std::vector<std::string> override;
+      -> std::vector<std::string>;
   auto openResource(const std::string &resourceString)
       -> std::unique_ptr<ResourceIfc> override;
 

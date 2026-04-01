@@ -1,8 +1,11 @@
 #pragma once
 #include "../../ifc/LoggerIfc.hpp"
 #include <esp_log.h>
+#include <esp_log_timestamp.h>
 #include <source_location>
 #include <string>
+#include <sys/select.h>
+#include <sys/time.h>
 
 class ESP32Logger : public LoggerIfc
 {
@@ -26,19 +29,34 @@ public:
 
     const auto espLevel = toEspLogLevel(level);
 
+    // generate microsecond-precision timestamp
+    // code from
+    // https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/system/system_time.html
+    gettimeofday(&tv_now, nullptr);
+    auto timestamp =
+        (int64_t)tv_now.tv_sec * 1000000L + (int64_t)tv_now.tv_usec;
+
+    // // milisecond-precision timestamp
+    // auto timestamp = esp_log_timestamp();
+
 // print full info in debug mode otherwise just log level and message
 #if defined(NDEBUG)
     static_cast<void>(location);
-    esp_log_write(
-        espLevel, kTag, "%s : %s\n", logLevelToString(level), message.c_str());
+    esp_log_write(espLevel,
+                  kTag,
+                  "(%llu) %s : %s\n",
+                  timestamp,
+                  logLevelToString(level),
+                  message.c_str());
 #else
     esp_log_write(espLevel,
                   kTag,
-                  "[%s : %lu : %s] %s : %s\n",
+                  "(%llu) %s [%s : %lu : %s] : %s\n",
+                  timestamp,
+                  logLevelToString(level),
                   location.file_name(),
                   static_cast<unsigned long>(location.line()),
                   location.function_name(),
-                  logLevelToString(level),
                   message.c_str());
 #endif
   }
@@ -66,4 +84,5 @@ private:
 
   static constexpr const char *kTag = "InstrumentControl";
   LogLevel mLogLevel{LogLevel::Info};
+  struct timeval tv_now;
 };

@@ -1,3 +1,12 @@
-idf_component_register(SRCS "main.cpp"
-                       INCLUDE_DIRS "."
-                       REQUIRES instrument_control)
+idf_component_register(
+  SRCS
+  "src/main.cpp"
+  "src/wifi.cpp"
+  INCLUDE_DIRS
+  "inc"
+  REQUIRES
+  instrument_control
+  esp_event
+  esp_wifi
+  esp_netif
+  nvs_flash)

@@ -1,5 +1,6 @@
 #include "../inc/ESP32Resource.hpp"
 #include "ifc/LoggerIfc.hpp"
+#include "ifc/ResourceIfc.hpp"
 #include <algorithm>
 #include <cerrno>
 #include <cstdlib>
@@ -12,7 +13,7 @@
 namespace
 {
 // helper function so that initialization of
-// sockaddr_in can be initialized at construction
+// sockaddr_in can be done at construction
 auto makeDestAddr(
     const std::string &resourceIp,
     uint16_t resourcePort) -> sockaddr_in
@@ -25,7 +26,18 @@ auto makeDestAddr(
 }
 } // namespace
 
-ESP32Resource::~ESP32Resource() { close(mSock); }
+ESP32Resource::~ESP32Resource() { closeConnection(); }
+
+auto ESP32Resource::closeConnection() -> void
+{
+  if (mSock >= 0)
+  {
+    shutdown(mSock, SHUT_RDWR);
+    close(mSock);
+    mSock = -1;
+  }
+  mIsOpen = false;
+}
 
 // assuming resourceString is in IP:port format
 // i.e. "192.168.1.1:80"
@@ -110,8 +122,7 @@ auto ESP32Resource::connect() -> void
   {
     logger_.log("Error connecting to host, errno " + std::to_string(errno),
                 LogLevel::Error);
-    close(mSock);
-    mIsOpen = false;
+    closeConnection();
     return;
   }
   mIsOpen = true;
@@ -122,14 +133,23 @@ auto ESP32Resource::ensureConnected() -> void
 {
   if (!mIsOpen)
   {
-    for (uint8_t attempt = 0; attempt < MAX_CONNECT_RETRIES; ++attempt)
+    for (uint8_t attempt = 0; attempt < MAX_CONNECT_RETRIES && !mIsOpen;
+         ++attempt)
     {
       logger_.log("Not connected to server, attempt " +
-                      std::to_string(attempt) + " out of " +
-                      std::to_string(MAX_CONNECT_RETRIES),
+                      std::to_string(attempt + 1),
                   LogLevel::Warn);
       connect();
     }
+
+    if (!mIsOpen)
+    {
+      logger_.log("Unable to connect to server after " +
+                      std::to_string(MAX_CONNECT_RETRIES) + " attempts",
+                  LogLevel::Error);
+      return;
+    }
+    vTaskDelay(pdMS_TO_TICKS(2000));
   }
 }
 
@@ -142,21 +162,57 @@ auto ESP32Resource::getFormattedIpPortPair() const -> std::string
 auto ESP32Resource::write(
     const std::string &command) -> bool
 {
-  // TODO: Write via UART/I2C/SPI
   logger_.log("ESP32Resource write");
 
   ensureConnected();
+  if (!mIsOpen)
+  {
+    logger_.log("Socket is not connected", LogLevel::Error);
+    return false;
+  }
 
-  (void)command;
+  if (lwip_send(mSock, command.c_str(), command.size(), 0) < 0)
+  {
+    logger_.log("Error sending message: \"" + command + "\", errno " +
+                    std::to_string(errno),
+                LogLevel::Error);
+    closeConnection();
+    return false;
+  }
+  logger_.log("Sent message: \"" + command + '\"');
   return true;
 }
 
 auto ESP32Resource::read() -> ReadResult
 {
-  // TODO: Read via UART/I2C/SPI
   ensureConnected();
+  if (!mIsOpen)
+  {
+    return ReadResult::failure();
+  }
 
-  return ReadResult::success("");
+  received = lwip_recv(mSock, rx_buffer.data(), sizeof(rx_buffer) - 1, 0);
+  if (received > 0)
+  {
+    rx_buffer[received] = '\0';
+    logger_.log("Received response: " + std::string(rx_buffer.data()));
+    readResult = ReadResult::success(std::string(rx_buffer.data()));
+  }
+  else if (received == 0)
+  {
+    logger_.log("Connection closed by server");
+    closeConnection();
+    readResult = ReadResult::failure();
+  }
+  else
+  {
+    logger_.log("Response reception error, errno " + std::to_string(errno),
+                LogLevel::Error);
+    closeConnection();
+    readResult = ReadResult::failure();
+  }
+
+  return readResult;
 }
 
 auto ESP32Resource::query(
