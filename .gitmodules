@@ -1,0 +1,6 @@
+[submodule "lib/RP2040/third_party/WIZnet-PICO-C"]
+	path = lib/RP2040/third_party/WIZnet-PICO-C
+	url = https://github.com/WIZnet-ioNIC/WIZnet-PICO-C.git
+[submodule "lib/RP2040/third_party/ioLibrary_Driver"]
+	path = lib/RP2040/third_party/ioLibrary_Driver
+	url = https://github.com/Wiznet/ioLibrary_Driver.git

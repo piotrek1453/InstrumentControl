@@ -10,8 +10,6 @@ public:
   RP2040ResourceManager(LoggerIfc &logger);
   ~RP2040ResourceManager() override = default;
 
-  [[nodiscard]] auto listAvailableResources() const
-      -> std::vector<std::string> override;
   auto openResource(const std::string &resourceString)
       -> std::unique_ptr<ResourceIfc> override;
 

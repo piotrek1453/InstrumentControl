@@ -68,7 +68,7 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../../lib
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(RP2040 RP2040.cpp)
+add_executable(RP2040 main/src/main.cpp)
 
 pico_set_program_name(RP2040 "RP2040")
 pico_set_program_version(RP2040 "0.1")
@@ -82,7 +82,8 @@ target_link_libraries(RP2040 pico_stdlib InstrumentControl::rp2040)
 
 # Add the standard include files to the build
 target_include_directories(RP2040 PRIVATE ${CMAKE_CURRENT_LIST_DIR}
-                                         ${CMAKE_CURRENT_LIST_DIR}/../../lib)
+                                         ${CMAKE_CURRENT_LIST_DIR}/../../lib
+                                         ${CMAKE_CURRENT_LIST_DIR}/main/inc)
 
 # Add any user requested libraries
 target_link_libraries(RP2040 hardware_spi hardware_timer)

@@ -5,8 +5,6 @@
 #include "ifc/LoggerIfc.hpp"
 #include "pico/stdlib.h"
 
-#include <print>
-
 #define LED_PIN 25
 
 static repeating_timer g_heartbeat_timer;
@@ -43,12 +41,6 @@ auto main() -> int
   RP2040ResourceManager manager(logger);
   logger.log("RP2040 example using InstrumentControl RP2040 backend");
 
-  for (int i = 0; i <= static_cast<int>(LogLevel::Trace); ++i)
-  {
-    logger.log(std::string("Logging at level ") +
-               logLevelToString(static_cast<LogLevel>(i)));
-  }
-
   auto resource = manager.openResource("SPI0");
   if (resource != nullptr)
   {
@@ -58,6 +50,7 @@ auto main() -> int
   while (true)
   {
     sleep_ms(1000);
+    logger.log("");
   }
 
   return 0;

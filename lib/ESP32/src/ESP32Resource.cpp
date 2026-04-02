@@ -87,14 +87,14 @@ ESP32Resource::ESP32Resource(
     : logger_(logger),
       mIP_PortPair(std::make_tuple(std::move(resourceIP),
                                    std::move(resourcePort))),
-      mDestAddr(makeDestAddr(std::get<0>(mIP_PortPair),
-                             std::get<1>(mIP_PortPair)))
+      mDestAddr(makeDestAddr(getIP(),
+                             getPort()))
 {
   logger_.log("Created ESP32Resource with IP:port " +
               getFormattedIpPortPair());
 }
 
-auto ESP32Resource::connect() -> void
+auto ESP32Resource::openSocketConnection() -> void
 {
   if (mIsOpen)
   {
@@ -139,7 +139,7 @@ auto ESP32Resource::ensureConnected() -> void
       logger_.log("Not connected to server, attempt " +
                       std::to_string(attempt + 1),
                   LogLevel::Warn);
-      connect();
+      openSocketConnection();
     }
 
     if (!mIsOpen)
@@ -149,14 +149,22 @@ auto ESP32Resource::ensureConnected() -> void
                   LogLevel::Error);
       return;
     }
-    vTaskDelay(pdMS_TO_TICKS(2000));
   }
 }
 
 auto ESP32Resource::getFormattedIpPortPair() const -> std::string
 {
-  return std::get<0>(mIP_PortPair) + ':' +
-         std::to_string(std::get<1>(mIP_PortPair));
+  return getIP() + ':' + std::to_string(getPort());
+}
+
+auto ESP32Resource::getIP() const -> std::string
+{
+  return std::get<0>(mIP_PortPair);
+}
+
+auto ESP32Resource::getPort() const -> uint16_t
+{
+  return std::get<1>(mIP_PortPair);
 }
 
 auto ESP32Resource::write(
@@ -186,17 +194,20 @@ auto ESP32Resource::write(
 auto ESP32Resource::read() -> ReadResult
 {
   ensureConnected();
+  readResult = ReadResult::failure();
   if (!mIsOpen)
   {
-    return ReadResult::failure();
+    logger_.log("Socket is not connected", LogLevel::Error);
+    return readResult;
   }
+  logger_.log("ESP32Resource read");
 
   received = lwip_recv(mSock, rx_buffer.data(), sizeof(rx_buffer) - 1, 0);
   if (received > 0)
   {
     rx_buffer[received] = '\0';
-    logger_.log("Received response: " + std::string(rx_buffer.data()));
     readResult = ReadResult::success(std::string(rx_buffer.data()));
+    logger_.log("Received response: " + readResult.value);
   }
   else if (received == 0)
   {

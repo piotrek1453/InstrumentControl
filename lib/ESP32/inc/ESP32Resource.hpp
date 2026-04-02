@@ -34,26 +34,15 @@ public:
       -> std::unique_ptr<ESP32Resource>;
 
   /**
-   * Sends command data through the configured transport.
-   *
-   * Current implementation acts as a transport placeholder and only validates
-   * connection state.
-   */
+   * Sends command data through the configured transport.*/
   auto write(const std::string &command) -> bool override;
 
   /**
-   * Reads response data from the configured transport.
-   *
-   * Current implementation acts as a transport placeholder and returns an
-   * empty successful result.
-   */
+   * Reads response data from the configured transport.*/
   auto read() -> ReadResult override;
 
   /**
-   * Executes write followed
-  int received;
-  ReadResult readResult; by read.
-   */
+   * Executes write followed by read.*/
   auto query(const std::string &command) -> ReadResult override;
 
 private:
@@ -64,7 +53,7 @@ private:
   /**
    * Establishes a TCP connection to the configured endpoint.
    */
-  auto connect() -> void;
+  auto openSocketConnection() -> void;
 
   /**
    * Terminates a TCP connection to the configured endpoint.
@@ -80,6 +69,16 @@ private:
    * Returns endpoint text in "ip:port" form.
    */
   [[nodiscard]] auto getFormattedIpPortPair() const -> std::string;
+
+  /**
+   * Returns server IP.
+   */
+  [[nodiscard]] auto getIP() const -> std::string;
+
+  /**
+   * Returns server port.
+   */
+  [[nodiscard]] auto getPort() const -> uint16_t;
 
   LoggerIfc &logger_;
   const std::tuple<const std::string, const uint16_t> mIP_PortPair;

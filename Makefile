@@ -8,7 +8,7 @@ BUILD_EXAMPLES ?= OFF             # ON to build example app(s)
 GENERATOR ?= Ninja                # CMake generator
 TOOLCHAIN ?=                      # Optional: path to CMake toolchain file (MCU)
 CMAKE_ARGS ?=                     # Extra CMake -D flags, e.g. -DPICO_SDK_PATH=...
-SRCS := $(shell find examples lib -type f \( -name '*.cpp' -o -name '*.hpp' -o -name '*.h' \) -not -path '*/build/*')
+SRCS := $(shell find examples lib -type f \( -name '*.cpp' -o -name '*.hpp' -o -name '*.h' \) -not -path '*/build/*' -not -path '*/third_party/*')
 
 .PHONY: build clean init_venv help conan pre_build build-visa build-visaclient build-esp32 build-rp2040 run-example
 
