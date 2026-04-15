@@ -17,16 +17,12 @@ extern "C" void app_main(
   logger.log("ESP32S3 example using InstrumentControl ESP32 backend");
 
   auto resource = manager.openResource(SERVER_IP_PORT_PAIR);
-  if (resource != nullptr)
-  {
-    static_cast<void>(resource->write("*IDN?"));
-  }
 
   while (true)
   {
     if (resource != nullptr)
     {
-      auto readResult = resource->read();
+      resource->query("*IDN?\r\n");
     }
   }
 }

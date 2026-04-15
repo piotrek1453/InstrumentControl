@@ -3,6 +3,7 @@
 #include "hardware/clocks.h"
 #include "hardware/timer.h"
 #include "ifc/LoggerIfc.hpp"
+#include "network_settings.h"
 #include "pico/stdlib.h"
 
 #define LED_PIN 25
@@ -41,16 +42,14 @@ auto main() -> int
   RP2040ResourceManager manager(logger);
   logger.log("RP2040 example using InstrumentControl RP2040 backend");
 
-  auto resource = manager.openResource("SPI0");
-  if (resource != nullptr)
-  {
-    static_cast<void>(resource->query("*IDN?"));
-  }
+  auto resource = manager.openResource(SERVER_IP_PORT_PAIR);
 
   while (true)
   {
-    sleep_ms(1000);
-    logger.log("");
+    if (resource != nullptr)
+    {
+      resource->query("*IDN?\r\n");
+    }
   }
 
   return 0;

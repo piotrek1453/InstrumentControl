@@ -1,11 +1,10 @@
 #include "../inc/RP2040Resource.hpp"
 #include "ifc/LoggerIfc.hpp"
+#include "ifc/ResourceAddressParser.hpp"
 #include "ifc/ResourceIfc.hpp"
 #include <algorithm>
 #include <cerrno>
 #include <cstdint>
-#include <cstdlib>
-#include <limits>
 #include <pico/time.h>
 #include <socket.h>
 #include <stdint.h>
@@ -13,11 +12,16 @@
 #include <sys/types.h>
 #include <tuple>
 
+namespace
+{
+constexpr uint8_t kSocketId{0};
+}
+
 RP2040Resource::~RP2040Resource() { closeConnection(); }
 
 auto RP2040Resource::closeConnection() -> void
 {
-  close(static_cast<uint8_t>(getPort()));
+  close(kSocketId);
   mIsOpen = false;
 }
 
@@ -27,74 +31,27 @@ auto RP2040Resource::create(
     LoggerIfc &logger,
     std::string resourceString) -> std::unique_ptr<RP2040Resource>
 {
-  size_t colonPos = resourceString.find(':');
-  if (colonPos == std::string::npos)
+  const auto parseResult = parseResourceAddress(resourceString);
+  if (!parseResult.isOk)
   {
-    logger.log("Incorrect resourceString: no colon found", LogLevel::Error);
-    return nullptr;
-  }
-
-  std::array<uint8_t, 4> parsedIpOctets{};
-  size_t octetIndex = 0;
-  uint16_t octetValue = 0;
-  size_t octetDigits = 0;
-  constexpr uint16_t kDecimalBase = 10U;
-
-  for (size_t i = 0; i <= colonPos; ++i)
-  {
-    const char currentChar = (i == colonPos) ? '.' : resourceString[i];
-    if (currentChar >= '0' && currentChar <= '9')
+    if (parseResult.error == ResourceAddressParseError::MissingColon)
     {
-      octetValue =
-          static_cast<uint16_t>((octetValue * kDecimalBase) +
-                                static_cast<uint16_t>(currentChar - '0'));
-      ++octetDigits;
-      if (octetDigits > 3U || octetValue > std::numeric_limits<uint8_t>::max())
-      {
-        logger.log("Incorrect IP in resourceString", LogLevel::Error);
-        return nullptr;
-      }
-      continue;
+      logger.log("Incorrect resourceString: no colon found", LogLevel::Error);
     }
-
-    if (currentChar != '.' || octetDigits == 0U ||
-        octetIndex >= parsedIpOctets.size())
+    else if (parseResult.error == ResourceAddressParseError::EmptyPort ||
+             parseResult.error == ResourceAddressParseError::InvalidPort)
+    {
+      logger.log("Incorrect port in resourceString", LogLevel::Error);
+    }
+    else
     {
       logger.log("Incorrect IP in resourceString", LogLevel::Error);
-      return nullptr;
     }
-
-    parsedIpOctets[octetIndex] = static_cast<uint8_t>(octetValue);
-    ++octetIndex;
-    octetValue = 0;
-    octetDigits = 0;
-  }
-
-  if (octetIndex != parsedIpOctets.size())
-  {
-    logger.log("Incorrect IP in resourceString", LogLevel::Error);
-    return nullptr;
-  }
-
-  const char *portStr = resourceString.c_str() + colonPos + 1;
-  if (*portStr == '\0')
-  {
-    logger.log("Incorrect port in resourceString", LogLevel::Error);
-    return nullptr;
-  }
-
-  errno = 0;
-  char *end = nullptr;
-  const unsigned long parsedPort = std::strtoul(portStr, &end, 10);
-  if (errno != 0 || *end != '\0' ||
-      parsedPort > std::numeric_limits<uint16_t>::max())
-  {
-    logger.log("Incorrect port in resourceString", LogLevel::Error);
     return nullptr;
   }
 
   return std::unique_ptr<RP2040Resource>(new RP2040Resource(
-      logger, parsedIpOctets, static_cast<uint16_t>(parsedPort)));
+      logger, parseResult.value.ipOctets, parseResult.value.port));
 }
 
 RP2040Resource::RP2040Resource(
@@ -121,7 +78,7 @@ auto RP2040Resource::openSocketConnection() -> void
 
   // socket opening
 
-  if (socket(getPort(), Sn_MR_TCP, 0, 0) < 0)
+  if (socket(kSocketId, Sn_MR_TCP, 0, 0) < 0)
   {
     logger_.log("Error creating socket, errno " + std::to_string(errno),
                 LogLevel::Error);
@@ -132,7 +89,7 @@ auto RP2040Resource::openSocketConnection() -> void
 
   // connecting to server
   logger_.log("Connecting to server on " + getFormattedIpPortPair());
-  if (connect(getPort(), getIP().data(), getPort()) != 0)
+  if (connect(kSocketId, getIP().data(), getPort()) != 0)
   {
     logger_.log("Error connecting to host, errno " + std::to_string(errno),
                 LogLevel::Error);
@@ -156,7 +113,7 @@ auto RP2040Resource::ensureConnected() -> void
                   LogLevel::Warn);
 
       openSocketConnection();
-      status = getSn_SR(getPort());
+      status = getSn_SR(kSocketId);
       if (status == SOCK_CLOSE_WAIT || status == SOCK_CLOSED)
       {
         closeConnection();
@@ -207,7 +164,7 @@ auto RP2040Resource::write(
   // ioLibrary send expects uint8_t*, even though it does not modify payload.
   auto *txData =
       const_cast<uint8_t *>(reinterpret_cast<const uint8_t *>(command.data()));
-  if (send(getPort(), txData, command.size()) < 0)
+  if (send(kSocketId, txData, command.size()) < 0)
   {
     logger_.log("Error sending message: \"" + command + "\", errno " +
                     std::to_string(errno),
@@ -230,19 +187,19 @@ auto RP2040Resource::read() -> ReadResult
   }
   logger_.log("RP2040Resource read");
 
-  mAvailable = getSn_RX_RSR(getPort());
+  mAvailable = getSn_RX_RSR(kSocketId);
   if (mAvailable > 0)
   {
     mAvailable = static_cast<int32_t>(std::min<uint32_t>(
         static_cast<uint32_t>(mAvailable), COMM_BUFFER_SIZE - 1));
     mRecv_len =
-        recv(getPort(), rx_buffer.data(), static_cast<uint16_t>(mAvailable));
+        recv(kSocketId, rx_buffer.data(), static_cast<uint16_t>(mAvailable));
     if (mRecv_len > 0)
     {
       rx_buffer[static_cast<size_t>(mRecv_len)] = 0;
       readResult = ReadResult::success(
           std::string(reinterpret_cast<char *>(rx_buffer.data())));
-      logger_.log("Received response: " + readResult.value);
+      logger_.log("Received response: \"" + readResult.value + '\"');
     }
     else
     {

@@ -1,10 +1,8 @@
 #include "../inc/ESP32Resource.hpp"
 #include "ifc/LoggerIfc.hpp"
+#include "ifc/ResourceAddressParser.hpp"
 #include "ifc/ResourceIfc.hpp"
-#include <algorithm>
 #include <cerrno>
-#include <cstdlib>
-#include <limits>
 #include <memory>
 #include <stdint.h>
 #include <string>
@@ -45,39 +43,27 @@ auto ESP32Resource::create(
     LoggerIfc &logger,
     std::string resourceString) -> std::unique_ptr<ESP32Resource>
 {
-  // split IP:port pair into separate variables
-  // needed to keep compatibility with the interface
-  std::string resourceIP;
-  uint16_t resourcePort;
-
-  size_t colonPos = resourceString.find(':');
-  if (colonPos == std::string::npos)
+  const auto parseResult = parseResourceAddress(resourceString);
+  if (!parseResult.isOk)
   {
-    logger.log("Incorrect resourceString: no colon found", LogLevel::Error);
+    if (parseResult.error == ResourceAddressParseError::MissingColon)
+    {
+      logger.log("Incorrect resourceString: no colon found", LogLevel::Error);
+    }
+    else if (parseResult.error == ResourceAddressParseError::EmptyPort ||
+             parseResult.error == ResourceAddressParseError::InvalidPort)
+    {
+      logger.log("Incorrect port in resourceString", LogLevel::Error);
+    }
+    else
+    {
+      logger.log("Incorrect IP in resourceString", LogLevel::Error);
+    }
     return nullptr;
   }
-  resourceIP = resourceString.substr(0, colonPos);
-
-  std::string portStr = resourceString.substr(colonPos + 1);
-  if (portStr.empty())
-  {
-    logger.log("Incorrect port in resourceString", LogLevel::Error);
-    return nullptr;
-  }
-
-  errno = 0;
-  char *end = nullptr;
-  const unsigned long parsedPort = std::strtoul(portStr.c_str(), &end, 10);
-  if (errno != 0 || *end != '\0' ||
-      parsedPort > std::numeric_limits<uint16_t>::max())
-  {
-    logger.log("Incorrect port in resourceString", LogLevel::Error);
-    return nullptr;
-  }
-  resourcePort = static_cast<uint16_t>(parsedPort);
 
   return std::unique_ptr<ESP32Resource>(new ESP32Resource(
-      logger, std::move(resourceIP), std::move(resourcePort)));
+      logger, parseResult.value.ipString, parseResult.value.port));
 }
 
 ESP32Resource::ESP32Resource(
@@ -207,7 +193,7 @@ auto ESP32Resource::read() -> ReadResult
   {
     rx_buffer[received] = '\0';
     readResult = ReadResult::success(std::string(rx_buffer.data()));
-    logger_.log("Received response: " + readResult.value);
+    logger_.log("Received response: \"" + readResult.value + '\"');
   }
   else if (received == 0)
   {
