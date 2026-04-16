@@ -85,7 +85,4 @@ target_include_directories(RP2040 PRIVATE ${CMAKE_CURRENT_LIST_DIR}
                                          ${CMAKE_CURRENT_LIST_DIR}/../../lib
                                          ${CMAKE_CURRENT_LIST_DIR}/main/inc)
 
-# Add any user requested libraries
-target_link_libraries(RP2040 hardware_spi hardware_timer)
-
 pico_add_extra_outputs(RP2040)

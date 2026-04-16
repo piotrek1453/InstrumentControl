@@ -1,3 +1,17 @@
-#define WIFI_SSID "test"
-#define WIFI_PASSWORD "test123"
-#define SERVER_IP_PORT_PAIR "192.168.1.1:23"
+#ifndef NETWORK_SETTINGS_H
+#define NETWORK_SETTINGS_H
+
+#include <array>
+#include <cstdint>
+
+constexpr std::array<uint8_t, 6> NETWORK_MAC =
+    {0x00, 0x08, 0xDC, 0x12, 0x34, 0x56};
+constexpr std::array<uint8_t, 4> NETWORK_IP = {0, 0, 0, 0};
+constexpr std::array<uint8_t, 4> NETWORK_SUBNET = {0, 0, 0, 0};
+constexpr std::array<uint8_t, 4> NETWORK_GATEWAY = {0, 0, 0, 0};
+constexpr std::array<uint8_t, 4> NETWORK_DNS = {0, 0, 0, 0};
+constexpr bool NETWORK_USE_DHCP = true;
+
+#define SERVER_IP_PORT_PAIR "192.168.1.10:6023"
+
+#endif // NETWORK_SETTINGS_H

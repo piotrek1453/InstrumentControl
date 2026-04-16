@@ -15,7 +15,9 @@
 namespace
 {
 constexpr uint8_t kSocketId{0};
-}
+constexpr uint8_t kConnectStatusPolls{25};
+constexpr uint16_t kConnectStatusPollDelayMs{20};
+} // namespace
 
 RP2040Resource::~RP2040Resource() { closeConnection(); }
 
@@ -89,15 +91,54 @@ auto RP2040Resource::openSocketConnection() -> void
 
   // connecting to server
   logger_.log("Connecting to server on " + getFormattedIpPortPair());
-  if (connect(kSocketId, getIP().data(), getPort()) != 0)
+  const int32_t connectResult = connect(kSocketId, getIP().data(), getPort());
+  if (connectResult == SOCK_OK)
   {
-    logger_.log("Error connecting to host, errno " + std::to_string(errno),
+    mIsOpen = true;
+    logger_.log("Connected to server");
+    return;
+  }
+
+  if (connectResult == SOCK_BUSY)
+  {
+    for (uint8_t poll = 0; poll < kConnectStatusPolls; ++poll)
+    {
+      const uint8_t status = getSn_SR(kSocketId);
+      if (status == SOCK_ESTABLISHED)
+      {
+        mIsOpen = true;
+        logger_.log("Connected to server");
+        return;
+      }
+
+      if (status == SOCK_CLOSE_WAIT || status == SOCK_CLOSED)
+      {
+        logger_.log("Connect failed during SOCK_BUSY, status " +
+                        std::to_string(status),
+                    LogLevel::Error);
+        closeConnection();
+        return;
+      }
+
+      sleep_ms(kConnectStatusPollDelayMs);
+    }
+
+    logger_.log("Connect timeout waiting for SOCK_ESTABLISHED",
                 LogLevel::Error);
     closeConnection();
     return;
   }
-  mIsOpen = true;
-  logger_.log("Connected to server");
+
+  if (connectResult != SOCK_OK)
+  {
+    logger_.log("Error connecting to host, ret " +
+                    std::to_string(connectResult) + ", sn_sr " +
+                    std::to_string(getSn_SR(kSocketId)) + ", errno " +
+                    std::to_string(errno),
+                LogLevel::Error);
+    closeConnection();
+    return;
+  }
 }
 
 auto RP2040Resource::ensureConnected() -> void

@@ -59,11 +59,13 @@ if(INSTRUMENTCONTROL_RP2040_ENABLE_W5500)
     instrumentcontrol_rp2040_iolibrary_driver STATIC
     "${INSTRUMENTCONTROL_RP2040_WIZNET_DIR}/Ethernet/wizchip_conf.c"
     "${INSTRUMENTCONTROL_RP2040_WIZNET_DIR}/Ethernet/socket.c"
+    "${INSTRUMENTCONTROL_RP2040_WIZNET_DIR}/Internet/DHCP/dhcp.c"
     "${INSTRUMENTCONTROL_RP2040_WIZNET_DIR}/Ethernet/W5500/w5500.c")
 
   target_include_directories(
     instrumentcontrol_rp2040_iolibrary_driver
     PUBLIC "${INSTRUMENTCONTROL_RP2040_WIZNET_DIR}/Ethernet"
+           "${INSTRUMENTCONTROL_RP2040_WIZNET_DIR}/Internet/DHCP"
            "${INSTRUMENTCONTROL_RP2040_WIZNET_DIR}/Ethernet/W5500")
 
   target_compile_definitions(
@@ -129,6 +131,14 @@ target_compile_definitions(
          DEVICE_BOARD_NAME=${INSTRUMENTCONTROL_RP2040_DEVICE_BOARD_NAME})
 
 if(INSTRUMENTCONTROL_RP2040_ENABLE_W5500)
+  target_include_directories(
+    instrumentcontrol_rp2040
+    PRIVATE "${INSTRUMENTCONTROL_RP2040_WIZNET_DIR}/Ethernet"
+            "${INSTRUMENTCONTROL_RP2040_WIZNET_DIR}/Internet/DHCP"
+            "${INSTRUMENTCONTROL_RP2040_WIZNET_DIR}/Ethernet/W5500"
+            "${INSTRUMENTCONTROL_RP2040_PORT_DIR}/ioLibrary_Driver/inc"
+            "${INSTRUMENTCONTROL_RP2040_PORT_DIR}")
+
   target_link_libraries(
     instrumentcontrol_rp2040
     PUBLIC instrumentcontrol_rp2040_iolibrary_driver
