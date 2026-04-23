@@ -7,6 +7,21 @@
 #include <sys/select.h>
 #include <sys/time.h>
 
+#if __has_include("sdkconfig.h")
+#include "sdkconfig.h"
+#endif
+
+#if defined(CONFIG_COMPILER_OPTIMIZATION_DEBUG)
+#define INSTRUMENTCONTROL_ESP32_LOG_WITH_SOURCE 1
+#elif defined(CONFIG_COMPILER_OPTIMIZATION_PERF) ||                           \
+    defined(CONFIG_COMPILER_OPTIMIZATION_SIZE)
+#define INSTRUMENTCONTROL_ESP32_LOG_WITH_SOURCE 0
+#elif defined(NDEBUG)
+#define INSTRUMENTCONTROL_ESP32_LOG_WITH_SOURCE 0
+#else
+#define INSTRUMENTCONTROL_ESP32_LOG_WITH_SOURCE 1
+#endif
+
 class ESP32Logger : public LoggerIfc
 {
 public:
@@ -14,6 +29,8 @@ public:
       LogLevel level) override
   {
     mLogLevel = level;
+    // make sure ESP-IDF toolchain doesn't override log level set in code
+    esp_log_level_set(kTag, toEspLogLevel(level));
   }
 
   void log(
@@ -35,28 +52,29 @@ public:
     gettimeofday(&tv_now, nullptr);
     auto timestamp =
         (int64_t)tv_now.tv_sec * 1000000L + (int64_t)tv_now.tv_usec;
+    const auto timestampMicros = static_cast<long long>(timestamp);
 
     // // milisecond-precision timestamp
     // auto timestamp = esp_log_timestamp();
 
-// print full info in debug mode otherwise just log level and message
-#if defined(NDEBUG)
-    static_cast<void>(location);
+// In ESP-IDF builds prefer sdkconfig optimization mode over NDEBUG.
+#if INSTRUMENTCONTROL_ESP32_LOG_WITH_SOURCE
     esp_log_write(espLevel,
                   kTag,
-                  "(%llu) %s : %s\n",
-                  timestamp,
-                  logLevelToString(level),
-                  message.c_str());
-#else
-    esp_log_write(espLevel,
-                  kTag,
-                  "(%llu) %s [%s : %lu : %s] : %s\n",
-                  timestamp,
+                  "(%lld) %s [%s : %lu : %s] : %s\n",
+                  timestampMicros,
                   logLevelToString(level),
                   location.file_name(),
                   static_cast<unsigned long>(location.line()),
                   location.function_name(),
+                  message.c_str());
+#else
+    static_cast<void>(location);
+    esp_log_write(espLevel,
+                  kTag,
+                  "(%lld) %s : %s\n",
+                  timestampMicros,
+                  logLevelToString(level),
                   message.c_str());
 #endif
   }

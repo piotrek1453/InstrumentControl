@@ -5,9 +5,9 @@
 
 enum class LogLevel : uint32_t
 {
-  Info,
-  Warn,
   Error,
+  Warn,
+  Info,
   Debug,
   Trace
 };

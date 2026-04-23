@@ -2,7 +2,6 @@
 #include "../inc/ESP32Resource.hpp"
 #include <memory>
 #include <string>
-#include <vector>
 
 ESP32ResourceManager::ESP32ResourceManager(
     LoggerIfc &logger)

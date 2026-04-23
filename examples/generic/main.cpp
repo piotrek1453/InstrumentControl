@@ -43,7 +43,7 @@ auto main() -> int
 {
   // create logger and enable highest level of logs
   Logger logger;
-  logger.setLoggingLevel(LogLevel::Trace);
+  logger.setLoggingLevel(LogLevel::Info);
 
 #if defined(IMPLEMENTATION_VISA) || defined(IMPLEMENTATION_VISAClient)
   // create datalogger

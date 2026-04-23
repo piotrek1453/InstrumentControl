@@ -41,7 +41,7 @@ auto main() -> int
       500, timer_heartbeat_callback, nullptr, &g_heartbeat_timer);
 
   RP2040Logger logger;
-  logger.setLoggingLevel(LogLevel::Trace);
+  logger.setLoggingLevel(LogLevel::Info);
 
   const RP2040NetworkConfig networkConfig{
       .mac = NETWORK_MAC,

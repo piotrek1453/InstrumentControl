@@ -65,7 +65,7 @@ RP2040Resource::RP2040Resource(
       mIP_PortPair(std::make_tuple(std::move(resourceIP),
                                    std::move(resourcePort)))
 {
-  logger_.log("Created RP2040Resource");
+  logger_.log("Created RP2040Resource", LogLevel::Debug);
 }
 
 auto RP2040Resource::openSocketConnection() -> void
@@ -83,11 +83,11 @@ auto RP2040Resource::openSocketConnection() -> void
   if (socket(kSocketId, Sn_MR_TCP, 0, 0) < 0)
   {
     logger_.log("Error creating socket, errno " + std::to_string(errno),
-                LogLevel::Error);
+                LogLevel::Warn);
     mIsOpen = false;
     return;
   }
-  logger_.log("Socket created");
+  logger_.log("Socket created", LogLevel::Debug);
 
   // connecting to server
   logger_.log("Connecting to server on " + getFormattedIpPortPair());
@@ -115,7 +115,7 @@ auto RP2040Resource::openSocketConnection() -> void
       {
         logger_.log("Connect failed during SOCK_BUSY, status " +
                         std::to_string(status),
-                    LogLevel::Error);
+                    LogLevel::Warn);
         closeConnection();
         return;
       }
@@ -124,7 +124,7 @@ auto RP2040Resource::openSocketConnection() -> void
     }
 
     logger_.log("Connect timeout waiting for SOCK_ESTABLISHED",
-                LogLevel::Error);
+                LogLevel::Warn);
     closeConnection();
     return;
   }
@@ -135,7 +135,7 @@ auto RP2040Resource::openSocketConnection() -> void
                     std::to_string(connectResult) + ", sn_sr " +
                     std::to_string(getSn_SR(kSocketId)) + ", errno " +
                     std::to_string(errno),
-                LogLevel::Error);
+                LogLevel::Warn);
     closeConnection();
     return;
   }
@@ -166,7 +166,7 @@ auto RP2040Resource::ensureConnected() -> void
     {
       logger_.log("Unable to connect to server after " +
                       std::to_string(MAX_CONNECT_RETRIES) + " attempts",
-                  LogLevel::Error);
+                  LogLevel::Warn);
       return;
     }
   }
@@ -197,10 +197,10 @@ auto RP2040Resource::write(
   ensureConnected();
   if (!mIsOpen)
   {
-    logger_.log("Socket is not connected", LogLevel::Error);
+    logger_.log("Socket is not connected", LogLevel::Warn);
     return false;
   }
-  logger_.log("RP2040Resource write");
+  logger_.log("RP2040Resource write", LogLevel::Debug);
 
   // ioLibrary send expects uint8_t*, even though it does not modify payload.
   auto *txData =
@@ -209,7 +209,7 @@ auto RP2040Resource::write(
   {
     logger_.log("Error sending message: \"" + command + "\", errno " +
                     std::to_string(errno),
-                LogLevel::Error);
+                LogLevel::Warn);
     closeConnection();
     return false;
   }
@@ -223,10 +223,10 @@ auto RP2040Resource::read() -> ReadResult
   readResult = ReadResult::failure();
   if (!mIsOpen)
   {
-    logger_.log("Socket is not connected", LogLevel::Error);
+    logger_.log("Socket is not connected", LogLevel::Warn);
     return readResult;
   }
-  logger_.log("RP2040Resource read");
+  logger_.log("RP2040Resource read", LogLevel::Debug);
 
   mAvailable = getSn_RX_RSR(kSocketId);
   if (mAvailable > 0)
@@ -244,7 +244,7 @@ auto RP2040Resource::read() -> ReadResult
     }
     else
     {
-      logger_.log("No message received", LogLevel::Error);
+      logger_.log("No message received", LogLevel::Warn);
       closeConnection();
     }
   }

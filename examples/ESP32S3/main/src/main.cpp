@@ -8,7 +8,7 @@ extern "C" void app_main(
     void)
 {
   ESP32Logger logger;
-  logger.setLoggingLevel(LogLevel::Trace);
+  logger.setLoggingLevel(LogLevel::Info);
 
   WiFi wifi(logger);
   wifi.wifi_config();

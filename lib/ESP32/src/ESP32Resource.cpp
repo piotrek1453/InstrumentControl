@@ -76,8 +76,8 @@ ESP32Resource::ESP32Resource(
       mDestAddr(makeDestAddr(getIP(),
                              getPort()))
 {
-  logger_.log("Created ESP32Resource with IP:port " +
-              getFormattedIpPortPair());
+  logger_.log("Created ESP32Resource with IP:port " + getFormattedIpPortPair(),
+              LogLevel::Debug);
 }
 
 auto ESP32Resource::openSocketConnection() -> void
@@ -95,19 +95,20 @@ auto ESP32Resource::openSocketConnection() -> void
   if (mSock < 0)
   {
     logger_.log("Error creating socket, errno " + std::to_string(errno),
-                LogLevel::Error);
+                LogLevel::Warn);
     mIsOpen = false;
     return;
   }
-  logger_.log("Socket created");
+  logger_.log("Socket created", LogLevel::Debug);
 
   // connecting to server
-  logger_.log("Connecting to server on " + getFormattedIpPortPair());
+  logger_.log("Connecting to server on " + getFormattedIpPortPair(),
+              LogLevel::Info);
   if (lwip_connect(mSock, (struct sockaddr *)&mDestAddr, sizeof(mDestAddr)) !=
       0)
   {
     logger_.log("Error connecting to host, errno " + std::to_string(errno),
-                LogLevel::Error);
+                LogLevel::Warn);
     closeConnection();
     return;
   }
@@ -132,7 +133,7 @@ auto ESP32Resource::ensureConnected() -> void
     {
       logger_.log("Unable to connect to server after " +
                       std::to_string(MAX_CONNECT_RETRIES) + " attempts",
-                  LogLevel::Error);
+                  LogLevel::Warn);
       return;
     }
   }
@@ -156,7 +157,7 @@ auto ESP32Resource::getPort() const -> uint16_t
 auto ESP32Resource::write(
     const std::string &command) -> bool
 {
-  logger_.log("ESP32Resource write");
+  logger_.log("ESP32Resource write", LogLevel::Debug);
 
   ensureConnected();
   if (!mIsOpen)
@@ -169,7 +170,7 @@ auto ESP32Resource::write(
   {
     logger_.log("Error sending message: \"" + command + "\", errno " +
                     std::to_string(errno),
-                LogLevel::Error);
+                LogLevel::Warn);
     closeConnection();
     return false;
   }
@@ -183,10 +184,10 @@ auto ESP32Resource::read() -> ReadResult
   readResult = ReadResult::failure();
   if (!mIsOpen)
   {
-    logger_.log("Socket is not connected", LogLevel::Error);
+    logger_.log("Socket is not connected", LogLevel::Warn);
     return readResult;
   }
-  logger_.log("ESP32Resource read");
+  logger_.log("ESP32Resource read", LogLevel::Debug);
 
   received = lwip_recv(mSock, rx_buffer.data(), sizeof(rx_buffer) - 1, 0);
   if (received > 0)
@@ -197,14 +198,14 @@ auto ESP32Resource::read() -> ReadResult
   }
   else if (received == 0)
   {
-    logger_.log("Connection closed by server");
+    logger_.log("Connection closed by server", LogLevel::Warn);
     closeConnection();
     readResult = ReadResult::failure();
   }
   else
   {
     logger_.log("Response reception error, errno " + std::to_string(errno),
-                LogLevel::Error);
+                LogLevel::Warn);
     closeConnection();
     readResult = ReadResult::failure();
   }
