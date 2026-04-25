@@ -9,4 +9,6 @@ idf_component_register(
   esp_event
   esp_wifi
   esp_netif
-  nvs_flash)
+  nvs_flash
+  esp_timer
+  heap)
