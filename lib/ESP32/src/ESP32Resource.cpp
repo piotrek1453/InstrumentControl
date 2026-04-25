@@ -162,7 +162,7 @@ auto ESP32Resource::write(
   ensureConnected();
   if (!mIsOpen)
   {
-    logger_.log("Socket is not connected", LogLevel::Error);
+    logger_.log("Socket is not connected", LogLevel::Warn);
     return false;
   }
 

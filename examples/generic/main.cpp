@@ -5,18 +5,14 @@
 #include <string_view>
 #ifdef IMPLEMENTATION_VISA
 #include "VISA/inc/ConsoleLogger.hpp"
-#include "VISA/inc/PCDataLogger.hpp"
 #include "VISA/inc/VISAResourceManager.hpp"
 using Logger = ConsoleLogger;
-using DataLogger = PCDataLogger;
 using ResourceManager = VISAResourceManager;
 
 #elifdef IMPLEMENTATION_VISAClient
 #include "VISA/inc/ConsoleLogger.hpp"
-#include "VISA/inc/PCDataLogger.hpp"
 #include "VISAClient/inc/VISAClientResourceManager.hpp"
 using Logger = ConsoleLogger;
-using DataLogger = PCDataLogger;
 using ResourceManager = VISAClientResourceManager;
 
 #elifdef IMPLEMENTATION_ESP32
@@ -35,9 +31,10 @@ using ResourceManager = RP2040ResourceManager;
 #error "Selected implementation does not provide headers here yet"
 #endif
 
-constexpr uint16_t DATALOGGER_BUFFER_SIZE = 1024;
 // example commands to be repeated in communications loop
-constexpr auto SCPI_COMMANDS = {"*IDN?", "*RST", ":AUTOSET EXECUTE"};
+constexpr auto SCPI_COMMANDS = {"*IDN?\r\n",
+                                "*RST\r\n",
+                                ":AUTOSET EXECUTE\r\n"};
 
 auto main() -> int
 {
@@ -45,25 +42,9 @@ auto main() -> int
   Logger logger;
   logger.setLoggingLevel(LogLevel::Info);
 
-#if defined(IMPLEMENTATION_VISA) || defined(IMPLEMENTATION_VISAClient)
-  // create datalogger
-  DataLogger dataLogger(DATALOGGER_BUFFER_SIZE);
-#endif
-
   ResourceManager manager(logger);
 
   logger.log("Example: Resource manager instantiated");
-
-  auto resources = manager.listAvailableResources();
-  std::string resourcesLog{};
-  for (const auto &resource : resources)
-  {
-    resourcesLog += '\t' + resource + '\n';
-  }
-  logger.log(
-      fmt::format("Available resources:\n{}\nsize of resources vector: {}",
-                  resourcesLog,
-                  resources.size()));
 
   auto resource =
       manager.openResource("TCPIP::10.153.1.20::INSTR"); // example IP string
@@ -73,21 +54,13 @@ auto main() -> int
     {
       // TODO: make this more robust, also differentating between write and
       // query doesn't work, only writes occur now
-      const auto commandView = std::string_view(command);
-      if (!commandView.empty() && commandView.back() == '?')
+      const auto commandView = std::string(command);
+      if (commandView.find('?') != std::string::npos)
       {
-#if defined(IMPLEMENTATION_VISA) || defined(IMPLEMENTATION_VISAClient)
-        dataLogger.log("query," + std::string(command) + "," +
-                       resource->query(command).value);
-#else
-        static_cast<void>(resource->query(command));
-#endif
+        resource->query(command);
       }
       else
       {
-#if defined(IMPLEMENTATION_VISA) || defined(IMPLEMENTATION_VISAClient)
-        dataLogger.log("write," + std::string(command) + "," + '-');
-#endif
         resource->write(command);
       }
     }

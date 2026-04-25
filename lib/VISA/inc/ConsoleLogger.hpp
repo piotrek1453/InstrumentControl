@@ -1,6 +1,7 @@
 #pragma once
 #include "ifc/LoggerIfc.hpp"
 #include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/sinks/stdout_sinks.h"
 #include <filesystem>
 #include <fmt/format.h>
 #include <memory>
@@ -8,6 +9,7 @@
 #include <spdlog/common.h>
 #include <spdlog/logger.h>
 #include <string>
+#include <sys/time.h>
 #include <unordered_map>
 
 static const std::unordered_map<LogLevel, spdlog::level::level_enum>
@@ -20,6 +22,13 @@ static const std::unordered_map<LogLevel, spdlog::level::level_enum>
 class ConsoleLogger : public LoggerIfc
 {
 public:
+  ConsoleLogger()
+  {
+    if (mLogger)
+    {
+      mLogger->set_pattern("%v");
+    }
+  }
   void setLoggingLevel(
       LogLevel level) override
   {
@@ -34,8 +43,27 @@ public:
   {
     auto filename =
         std::filesystem::path(location.file_name()).filename().string();
-    auto formatted =
-        fmt::format("[{}:{}] {}", filename, location.line(), message);
+
+    struct timeval tv_now;
+    gettimeofday(&tv_now, nullptr);
+    unsigned long long timestamp =
+        (unsigned long long)tv_now.tv_sec * 1000000ULL +
+        (unsigned long long)tv_now.tv_usec;
+
+#if defined(NDEBUG)
+    static_cast<void>(location);
+    auto formatted = fmt::format(
+        "({}) {} : {}", timestamp, logLevelToString(level), message);
+#else
+    auto formatted = fmt::format("({}) {} [{} : {} : {}] : {}",
+                                 timestamp,
+                                 logLevelToString(level),
+                                 filename,
+                                 location.line(),
+                                 location.function_name(),
+                                 message);
+#endif
+
     mLogger->log(logLevelMap.at(level), formatted);
   }
 

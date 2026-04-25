@@ -1,6 +1,7 @@
 #pragma once
 #include "ifc/LoggerIfc.hpp"
 #include "ifc/ResourceIfc.hpp"
+#include <array>
 #include <atomic>
 #include <memory>
 #include <string>
@@ -9,7 +10,7 @@
 
 constexpr ViAccessMode INSTRUMENT_ACCESS_MODE{VI_NULL};
 constexpr ViUInt32 INSTRUMENT_TIMEOUT_MS{200};
-constexpr size_t INSTRUMENT_BUFFER_SIZE_B{32768};
+constexpr size_t INSTRUMENT_BUFFER_SIZE_B{2048};
 
 class VISAResource : public ResourceIfc
 {
@@ -34,5 +35,7 @@ private:
   const std::string mResourceString;
   ViSession mResourceManagerHandle, mInstrumentSessionHandle;
   std::atomic<bool> mIsOpen{false};
+  std::array<unsigned char, INSTRUMENT_BUFFER_SIZE_B> readBuffer;
+  ReadResult readResult;
   ViUInt32 mIOBytes{};
 };
