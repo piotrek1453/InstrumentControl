@@ -1,15 +1,16 @@
-# == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
+# == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension
+# to work ==
 if(WIN32)
-    set(USERHOME $ENV{USERPROFILE})
+  set(USERHOME $ENV{USERPROFILE})
 else()
-    set(USERHOME $ENV{HOME})
+  set(USERHOME $ENV{HOME})
 endif()
 set(sdkVersion 2.2.0)
 set(toolchainVersion 14_2_Rel1)
 set(picotoolVersion 2.2.0-a4)
 set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
-if (EXISTS ${picoVscode})
-    include(${picoVscode})
+if(EXISTS ${picoVscode})
+  include(${picoVscode})
 endif()
 # ====================================================================================
 # Generated Cmake Pico project file
@@ -81,8 +82,8 @@ pico_enable_stdio_usb(RP2040 0)
 target_link_libraries(RP2040 pico_stdlib InstrumentControl::rp2040)
 
 # Add the standard include files to the build
-target_include_directories(RP2040 PRIVATE ${CMAKE_CURRENT_LIST_DIR}
-                                         ${CMAKE_CURRENT_LIST_DIR}/../../lib
-                                         ${CMAKE_CURRENT_LIST_DIR}/main/inc)
+target_include_directories(
+  RP2040 PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_LIST_DIR}/../../lib
+                 ${CMAKE_CURRENT_LIST_DIR}/main/inc)
 
 pico_add_extra_outputs(RP2040)
