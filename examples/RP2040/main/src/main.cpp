@@ -145,7 +145,7 @@ auto main() -> int
     if (resource != nullptr)
     {
       g_busy.store(true, std::memory_order_relaxed);
-      resource->query("*IDN?\r\n");
+      resource->query("MEAS:RES?\r\n");
       g_busy.store(false, std::memory_order_relaxed);
     }
 

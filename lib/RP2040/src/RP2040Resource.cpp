@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <cerrno>
 #include <cstdint>
-#include <pico/time.h>
 #include <socket.h>
 #include <stdint.h>
 #include <string>
@@ -17,6 +16,32 @@ namespace
 constexpr uint8_t kSocketId{0};
 constexpr uint8_t kConnectStatusPolls{25};
 constexpr uint16_t kConnectStatusPollDelayMs{20};
+constexpr uint16_t kReadResponsePolls{2000};
+constexpr uint32_t kBusyWaitIterations{5000};
+
+auto busyWait() -> void
+{
+  volatile uint32_t sink{0};
+  for (uint32_t iteration = 0; iteration < kBusyWaitIterations; ++iteration)
+  {
+    sink += iteration;
+  }
+  (void)sink;
+}
+
+auto waitForAvailableData() -> bool
+{
+  for (uint16_t poll = 0; poll < kReadResponsePolls; ++poll)
+  {
+    if (getSn_RX_RSR(kSocketId) > 0)
+    {
+      return true;
+    }
+    busyWait();
+  }
+
+  return false;
+}
 } // namespace
 
 RP2040Resource::~RP2040Resource() { closeConnection(); }
@@ -120,7 +145,10 @@ auto RP2040Resource::openSocketConnection() -> void
         return;
       }
 
-      sleep_ms(kConnectStatusPollDelayMs);
+      for (uint16_t delay = 0; delay < kConnectStatusPollDelayMs; ++delay)
+      {
+        busyWait();
+      }
     }
 
     logger_.log("Connect timeout waiting for SOCK_ESTABLISHED",
@@ -158,7 +186,10 @@ auto RP2040Resource::ensureConnected() -> void
       if (status == SOCK_CLOSE_WAIT || status == SOCK_CLOSED)
       {
         closeConnection();
-        sleep_ms(200);
+        for (uint16_t delay = 0; delay < 200; ++delay)
+        {
+          busyWait();
+        }
       }
     }
 
@@ -227,6 +258,12 @@ auto RP2040Resource::read() -> ReadResult
     return readResult;
   }
   logger_.log("RP2040Resource read", LogLevel::Debug);
+
+  if (!waitForAvailableData())
+  {
+    logger_.log("Timed out waiting for response", LogLevel::Warn);
+    return readResult;
+  }
 
   mAvailable = getSn_RX_RSR(kSocketId);
   if (mAvailable > 0)
