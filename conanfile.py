@@ -8,7 +8,7 @@ class InstrumentControlConan(ConanFile):
 
     settings = "os", "compiler", "build_type", "arch"
 
-    requires = ["spdlog/1.12.0"]
+    requires = ["spdlog/1.12.0", "grpc/1.78.1", "protobuf/6.33.5"]
 
     generators = ("CMakeToolchain", "CMakeDeps")
 
