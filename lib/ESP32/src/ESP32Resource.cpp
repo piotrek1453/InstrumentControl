@@ -70,14 +70,14 @@ ESP32Resource::ESP32Resource(
     LoggerIfc &logger,
     std::string resourceIP,
     uint16_t resourcePort) noexcept
-    : logger_(logger),
+    : mLogger(logger),
       mIP_PortPair(std::make_tuple(std::move(resourceIP),
                                    std::move(resourcePort))),
       mDestAddr(makeDestAddr(getIP(),
                              getPort()))
 {
-  logger_.log("Created ESP32Resource with IP:port " + getFormattedIpPortPair(),
-              LogLevel::Debug);
+  logger.log("Created ESP32Resource with IP:port " + getFormattedIpPortPair(),
+             LogLevel::Debug);
 }
 
 auto ESP32Resource::openSocketConnection() -> void
@@ -87,33 +87,33 @@ auto ESP32Resource::openSocketConnection() -> void
     return;
   }
 
-  logger_.log("Setting up communication with server on " +
+  mLogger.log("Setting up communication with server on " +
               getFormattedIpPortPair());
 
   // socket creation
   mSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (mSock < 0)
   {
-    logger_.log("Error creating socket, errno " + std::to_string(errno),
+    mLogger.log("Error creating socket, errno " + std::to_string(errno),
                 LogLevel::Warn);
     mIsOpen = false;
     return;
   }
-  logger_.log("Socket created", LogLevel::Debug);
+  mLogger.log("Socket created", LogLevel::Debug);
 
   // connecting to server
-  logger_.log("Connecting to server on " + getFormattedIpPortPair(),
+  mLogger.log("Connecting to server on " + getFormattedIpPortPair(),
               LogLevel::Info);
   if (lwip_connect(mSock, (struct sockaddr *)&mDestAddr, sizeof(mDestAddr)) !=
       0)
   {
-    logger_.log("Error connecting to host, errno " + std::to_string(errno),
+    mLogger.log("Error connecting to host, errno " + std::to_string(errno),
                 LogLevel::Warn);
     closeConnection();
     return;
   }
   mIsOpen = true;
-  logger_.log("Connected to server");
+  mLogger.log("Connected to server");
 }
 
 auto ESP32Resource::ensureConnected() -> void
@@ -123,7 +123,7 @@ auto ESP32Resource::ensureConnected() -> void
     for (uint8_t attempt = 0; attempt < MAX_CONNECT_RETRIES && !mIsOpen;
          ++attempt)
     {
-      logger_.log("Not connected to server, attempt " +
+      mLogger.log("Not connected to server, attempt " +
                       std::to_string(attempt + 1),
                   LogLevel::Warn);
       openSocketConnection();
@@ -131,7 +131,7 @@ auto ESP32Resource::ensureConnected() -> void
 
     if (!mIsOpen)
     {
-      logger_.log("Unable to connect to server after " +
+      mLogger.log("Unable to connect to server after " +
                       std::to_string(MAX_CONNECT_RETRIES) + " attempts",
                   LogLevel::Warn);
       return;
@@ -157,24 +157,24 @@ auto ESP32Resource::getPort() const -> uint16_t
 auto ESP32Resource::write(
     const std::string &command) -> bool
 {
-  logger_.log("ESP32Resource write", LogLevel::Debug);
+  mLogger.log("ESP32Resource write", LogLevel::Debug);
 
   ensureConnected();
   if (!mIsOpen)
   {
-    logger_.log("Socket is not connected", LogLevel::Warn);
+    mLogger.log("Socket is not connected", LogLevel::Warn);
     return false;
   }
 
   if (lwip_send(mSock, command.c_str(), command.size(), 0) < 0)
   {
-    logger_.log("Error sending message: \"" + command + "\", errno " +
+    mLogger.log("Error sending message: \"" + command + "\", errno " +
                     std::to_string(errno),
                 LogLevel::Warn);
     closeConnection();
     return false;
   }
-  logger_.log("Sent message: \"" + command + '\"');
+  mLogger.log("Sent message: \"" + command + '\"');
   return true;
 }
 
@@ -184,27 +184,27 @@ auto ESP32Resource::read() -> ReadResult
   readResult = ReadResult::failure();
   if (!mIsOpen)
   {
-    logger_.log("Socket is not connected", LogLevel::Warn);
+    mLogger.log("Socket is not connected", LogLevel::Warn);
     return readResult;
   }
-  logger_.log("ESP32Resource read", LogLevel::Debug);
+  mLogger.log("ESP32Resource read", LogLevel::Debug);
 
   received = lwip_recv(mSock, rx_buffer.data(), sizeof(rx_buffer) - 1, 0);
   if (received > 0)
   {
     rx_buffer[received] = '\0';
     readResult = ReadResult::success(std::string(rx_buffer.data()));
-    logger_.log("Received response: \"" + readResult.value + '\"');
+    mLogger.log("Received response: \"" + readResult.value + '\"');
   }
   else if (received == 0)
   {
-    logger_.log("Connection closed by server", LogLevel::Warn);
+    mLogger.log("Connection closed by server", LogLevel::Warn);
     closeConnection();
     readResult = ReadResult::failure();
   }
   else
   {
-    logger_.log("Response reception error, errno " + std::to_string(errno),
+    mLogger.log("Response reception error, errno " + std::to_string(errno),
                 LogLevel::Warn);
     closeConnection();
     readResult = ReadResult::failure();

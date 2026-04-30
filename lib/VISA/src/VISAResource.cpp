@@ -34,7 +34,7 @@ VISAResource::VISAResource(
     LoggerIfc &logger,
     std::string resourceString,
     ViSession resourceManagerHandle) noexcept
-    : logger_(logger),
+    : mLogger(logger),
       mResourceString(std::move(resourceString)),
       mResourceManagerHandle(resourceManagerHandle)
 {
@@ -49,7 +49,7 @@ VISAResource::VISAResource(
     std::array<ViChar, INSTRUMENT_BUFFER_SIZE_B> statusBuffer;
     auto statusDescription =
         viStatusDesc(mResourceManagerHandle, status, statusBuffer.data());
-    logger_.log(fmt::format("Error connecting to instrument\nResource string: "
+    mLogger.log(fmt::format("Error connecting to instrument\nResource string: "
                             "{}\nError: {} - {}",
                             mResourceString,
                             statusDescription,
@@ -59,7 +59,7 @@ VISAResource::VISAResource(
   }
   else
   {
-    logger_.log("Created VISAResource with resource string " +
+    mLogger.log("Created VISAResource with resource string " +
                 mResourceString);
     mIsOpen = true;
   }
@@ -68,7 +68,7 @@ VISAResource::VISAResource(
 auto VISAResource::write(
     const std::string &command) -> bool
 {
-  logger_.log("VISAResource write", LogLevel::Debug);
+  mLogger.log("VISAResource write", LogLevel::Debug);
 
   auto status =
       viWrite(mInstrumentSessionHandle,
@@ -80,7 +80,7 @@ auto VISAResource::write(
     std::array<ViChar, INSTRUMENT_BUFFER_SIZE_B> statusBuffer;
     auto statusDescription =
         viStatusDesc(mResourceManagerHandle, status, statusBuffer.data());
-    logger_.log(
+    mLogger.log(
         fmt::format(
             "Error writing to instrument\nResource string: {}\nError: {} - {}",
             mResourceString,
@@ -89,13 +89,14 @@ auto VISAResource::write(
         LogLevel::Warn);
     return false;
   }
-  logger_.log("Sent message: \"" + command + '\"');
+
+  mLogger.log("Sent message: \"" + command + '\"');
   return true;
 }
 
 auto VISAResource::read() -> ReadResult
 {
-  logger_.log("VISAResource read", LogLevel::Debug);
+  mLogger.log("VISAResource read", LogLevel::Debug);
 
   auto status = viRead(mInstrumentSessionHandle,
                        static_cast<ViBuf>(readBuffer.data()),
@@ -106,7 +107,7 @@ auto VISAResource::read() -> ReadResult
     std::array<ViChar, INSTRUMENT_BUFFER_SIZE_B> statusBuffer;
     auto statusDescription =
         viStatusDesc(mResourceManagerHandle, status, statusBuffer.data());
-    logger_.log(fmt::format("Error reading from instrument\nResource string: "
+    mLogger.log(fmt::format("Error reading from instrument\nResource string: "
                             "{}\nError: {} - {}",
                             mResourceString,
                             statusDescription,
@@ -117,7 +118,7 @@ auto VISAResource::read() -> ReadResult
 
   readResult = ReadResult::success(
       std::string(reinterpret_cast<char *>(readBuffer.data()), mIOBytes));
-  logger_.log("Received response: \"" + readResult.value + '\"');
+  mLogger.log("Received response: \"" + readResult.value + '\"');
   return readResult;
 }
 

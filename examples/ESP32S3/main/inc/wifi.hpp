@@ -16,7 +16,7 @@ class WiFi
 public:
   WiFi(
       LoggerIfc &logger)
-      : logger_(logger)
+      : mLogger(logger)
   {
   }
   ~WiFi() = default;
@@ -36,6 +36,6 @@ private:
   static constexpr char SSID[] = WIFI_SSID;
   static constexpr char PASSWORD[] = WIFI_PASSWORD;
 
-  LoggerIfc &logger_;
+  LoggerIfc &mLogger;
   EventGroupHandle_t wifi_event_group_ = nullptr;
 };

@@ -39,7 +39,7 @@ auto WiFi::handle_wifi_event(
   {
     if (retry_count < MAX_RETRY)
     {
-      logger_.log("Disconnected, retrying... (" +
+      mLogger.log("Disconnected, retrying... (" +
                   std::to_string(retry_count + 1) + "/" +
                   std::to_string(MAX_RETRY) + ")");
       esp_wifi_connect();
@@ -47,7 +47,7 @@ auto WiFi::handle_wifi_event(
     }
     else
     {
-      logger_.log("Failed to connect after " + std::to_string(MAX_RETRY) +
+      mLogger.log("Failed to connect after " + std::to_string(MAX_RETRY) +
                       " attempts",
                   LogLevel::Error);
       xEventGroupSetBits(wifi_event_group_, WIFI_FAIL_BIT);
@@ -59,7 +59,7 @@ auto WiFi::handle_wifi_event(
     ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
     char ip_addr[16];
     snprintf(ip_addr, sizeof(ip_addr), IPSTR, IP2STR(&event->ip_info.ip));
-    logger_.log("Got IP: " + std::string(ip_addr));
+    mLogger.log("Got IP: " + std::string(ip_addr));
     retry_count = 0; // counter reset
     xEventGroupSetBits(wifi_event_group_, WIFI_CONNECTED_BIT);
   }
@@ -110,7 +110,7 @@ auto WiFi::wifi_config() -> void
   ESP_ERROR_CHECK(esp_wifi_start());
 
   // connecting to network
-  logger_.log("connecting to network with SSID " + std::string(SSID) + "...");
+  mLogger.log("connecting to network with SSID " + std::string(SSID) + "...");
   // wait max 20s for connection
   EventBits_t bits = xEventGroupWaitBits(wifi_event_group_,
                                          WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
@@ -120,14 +120,14 @@ auto WiFi::wifi_config() -> void
 
   if (bits & WIFI_CONNECTED_BIT)
   {
-    logger_.log("WiFi connected");
+    mLogger.log("WiFi connected");
   }
   else if (bits & WIFI_FAIL_BIT)
   {
-    logger_.log("WiFi connection failed", LogLevel::Error);
+    mLogger.log("WiFi connection failed", LogLevel::Error);
   }
   else
   {
-    logger_.log("Timeout connecting to WiFi", LogLevel::Error);
+    mLogger.log("Timeout connecting to WiFi", LogLevel::Error);
   }
 }

@@ -5,7 +5,7 @@
 
 ESP32ResourceManager::ESP32ResourceManager(
     LoggerIfc &logger)
-    : logger_(logger)
+    : mLogger(logger)
 {
 }
 
@@ -14,5 +14,5 @@ ESP32ResourceManager::ESP32ResourceManager(
 auto ESP32ResourceManager::openResource(
     const std::string &resourceString) -> std::unique_ptr<ResourceIfc>
 {
-  return ESP32Resource::create(logger_, resourceString);
+  return ESP32Resource::create(mLogger, resourceString);
 }

@@ -80,7 +80,7 @@ private:
    */
   [[nodiscard]] auto getPort() const -> uint16_t;
 
-  LoggerIfc &logger_;
+  LoggerIfc &mLogger;
   const std::tuple<const std::string, const uint16_t> mIP_PortPair;
   int mSock{-1};
   const struct sockaddr_in mDestAddr{};

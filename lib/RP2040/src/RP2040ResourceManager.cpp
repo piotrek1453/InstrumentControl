@@ -146,7 +146,7 @@ auto RP2040ResourceManager::create(
 
 RP2040ResourceManager::RP2040ResourceManager(
     LoggerIfc &logger)
-    : logger_(logger)
+    : mLogger(logger)
 {
 }
 
@@ -155,9 +155,9 @@ auto RP2040ResourceManager::openResource(
 {
   if (!isNetworkInitialized_)
   {
-    logger_.log("W5500/network stack is not initialized", LogLevel::Error);
+    mLogger.log("W5500/network stack is not initialized", LogLevel::Error);
     return nullptr;
   }
 
-  return RP2040Resource::create(logger_, resourceString);
+  return RP2040Resource::create(mLogger, resourceString);
 }

@@ -60,7 +60,7 @@ auto VISAResourceManager::listAvailableResources() const
                     status,
                     instrDescriptor.data(),
                     numInstrs - 1),
-        LogLevel::Trace);
+        LogLevel::Info);
 
     // VISA doesn't clean the buffer: make sure it's empty not to get
     // garbage in any of the resource strings

@@ -31,7 +31,7 @@ private:
                         std::string resourceString,
                         ViSession resourceManagerHandle) noexcept;
 
-  LoggerIfc &logger_;
+  LoggerIfc &mLogger;
   const std::string mResourceString;
   ViSession mResourceManagerHandle, mInstrumentSessionHandle;
   std::atomic<bool> mIsOpen{false};

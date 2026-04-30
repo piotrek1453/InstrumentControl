@@ -31,6 +31,6 @@ public:
 private:
   explicit RP2040ResourceManager(LoggerIfc &logger);
 
-  LoggerIfc &logger_;
+  LoggerIfc &mLogger;
   bool isNetworkInitialized_{false};
 };

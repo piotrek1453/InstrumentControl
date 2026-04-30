@@ -76,7 +76,7 @@ private:
    */
   [[nodiscard]] auto getPort() const -> uint16_t;
 
-  LoggerIfc &logger_;
+  LoggerIfc &mLogger;
   // not const because connect() takes
   // non-const uint8_t* for IP
   std::tuple<std::array<uint8_t, 4>, const uint16_t> mIP_PortPair;

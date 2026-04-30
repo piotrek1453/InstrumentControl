@@ -78,7 +78,10 @@ build-rp2040:
 
 # Run example (only meaningful for PC impls)
 run-example:
-	./$(BUILD_DIR)/examples/generic/InstrumentControlExample
+	./$(BUILD_DIR)/examples/VISA/InstrumentControlVISA
+
+run-example-visaclient:
+	./$(BUILD_DIR)/examples/VISAClient/InstrumentControlVISAClient
 
 # ----------------------------------------
 # Clean build directory
@@ -137,7 +140,7 @@ help:
 	@echo "  make init_venv"
 	@echo "      Create Python virtual environment and install requirements"
 	@echo "  make run-example"
-	@echo "      Run the generic example application (PC impls only)"
+	@echo "      Run the example application (PC impls only)"
 	@echo ""
 	@echo "Defaults:"
 	@echo "  IMPLEMENTATION=$(IMPLEMENTATION)"

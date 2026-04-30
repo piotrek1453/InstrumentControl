@@ -14,5 +14,5 @@ public:
       -> std::unique_ptr<ResourceIfc> override;
 
 private:
-  LoggerIfc &logger_;
+  LoggerIfc &mLogger;
 };
