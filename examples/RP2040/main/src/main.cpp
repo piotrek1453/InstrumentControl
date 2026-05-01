@@ -1,5 +1,6 @@
 #include "../../lib/RP2040/inc/RP2040Logger.hpp"
 #include "../../lib/RP2040/inc/RP2040ResourceManager.hpp"
+#include "InputHelpers.hpp"
 #include "hardware/clocks.h"
 #include "hardware/timer.h"
 #include "ifc/LoggerIfc.hpp"
@@ -28,11 +29,11 @@ static std::atomic<uint32_t> g_last_min_free{0};
 static size_t g_heap_total = 0;
 
 // forward declaration so the timer callback can call it
-static size_t get_free_ram_bytes();
+static auto get_free_ram_bytes() -> size_t;
 
 // monitor timer callback: runs every 1 ms, accumulates samples
-static bool monitor_timer_callback(
-    repeating_timer *t)
+static auto monitor_timer_callback(
+    repeating_timer *t) -> bool
 {
   (void)t;
   g_total_ticks.fetch_add(1, std::memory_order_relaxed);
@@ -62,7 +63,7 @@ static bool monitor_timer_callback(
   return true;
 }
 
-static size_t get_free_ram_bytes()
+static auto get_free_ram_bytes() -> size_t
 {
   void *heap_end = sbrk(0);
   volatile char stack_var;
@@ -135,10 +136,18 @@ auto main() -> int
 
   logger.log("RP2040 example using InstrumentControl RP2040 backend");
 
-  auto resource = manager->openResource(SERVER_IP_PORT_PAIR);
+  auto resourceString =
+      example_input::readLine("Enter VISA resource string: ");
+  if (resourceString.empty())
+  {
+    logger.log("ERROR: resource string is empty, going into infinite loop");
+    while (true)
+    {
+      tight_loop_contents();
+    }
+  }
 
-  // start monitor timer: sample every 1 ms, aggregate to 1s windows
-  add_repeating_timer_ms(1, monitor_timer_callback, nullptr, &g_monitor_timer);
+  auto resource = manager->openResource(resourceString);
 
   if (resource == nullptr)
   {
@@ -148,11 +157,20 @@ auto main() -> int
     }
   }
 
+  auto commandPlan = example_input::readCommandPlan();
+
+  // start monitor timer: sample every 1 ms, aggregate to 1s windows
+  add_repeating_timer_ms(1, monitor_timer_callback, nullptr, &g_monitor_timer);
+
   while (true)
   {
-    g_busy.store(true, std::memory_order_relaxed);
-    resource->query("MEAS:RES?\r\n");
-    g_busy.store(false, std::memory_order_relaxed);
+
+    for (const auto &step : commandPlan)
+    {
+      g_busy.store(true, std::memory_order_relaxed);
+      step.execute(*resource, step.command);
+      g_busy.store(false, std::memory_order_relaxed);
+    }
 
     if (g_log_now)
     {

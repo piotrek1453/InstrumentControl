@@ -1,5 +1,6 @@
 #include "ESP32/inc/ESP32Logger.hpp"
 #include "ESP32/inc/ESP32ResourceManager.hpp"
+#include "InputHelpers.hpp"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "wifi.hpp"
@@ -7,6 +8,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <driver/uart.h>
+#include <esp_err.h>
 #include <esp_heap_caps.h>
 #include <esp_timer.h>
 
@@ -17,16 +20,16 @@ static std::atomic_bool g_busy{false};
 static std::atomic_uint g_total_samples{0};
 static std::atomic_uint g_busy_samples{0};
 
-static void sampling_timer_cb(
-    void * /*arg*/)
+static auto sampling_timer_cb(
+    void *ctx) -> void
 {
   g_total_samples.fetch_add(1, std::memory_order_relaxed);
   if (g_busy.load(std::memory_order_relaxed))
     g_busy_samples.fetch_add(1, std::memory_order_relaxed);
 }
 
-static void monitor_task(
-    void *)
+static auto monitor_task(
+    void *ctx) -> void
 {
   // start esp_timer periodic 1ms sampler
   esp_timer_create_args_t args{};
@@ -72,24 +75,29 @@ static void monitor_task(
   }
 }
 
-extern "C" void vConfigureTimerForRunTimeStats(
-    void)
+extern "C" auto vConfigureTimerForRunTimeStats(
+    void) -> void
 {
   // no explicit timer required; esp_timer is used
 }
 
-extern "C" unsigned long ulGetRunTimeCounterValue(
-    void)
+extern "C" auto ulGetRunTimeCounterValue(
+    void) -> unsigned long
 {
   // return run-time counter in units of 0.1 ms
   return (unsigned long)(esp_timer_get_time() / 10);
 }
 
-extern "C" void app_main(
-    void)
+extern "C" auto app_main(
+    void) -> void
 {
   ESP32Logger logger;
   logger.setLoggingLevel(LogLevel::Info);
+
+  // bidirectional UART setup
+  const uart_port_t consoleUart =
+      static_cast<uart_port_t>(CONFIG_ESP_CONSOLE_UART_NUM);
+  ESP_ERROR_CHECK(uart_driver_install(consoleUart, 1024, 0, 0, nullptr, 0));
 
   WiFi wifi(logger);
   wifi.wifi_config();
@@ -97,25 +105,42 @@ extern "C" void app_main(
   ESP32ResourceManager manager(logger);
   logger.log("ESP32S3 example using InstrumentControl ESP32 backend");
 
-  // start system monitor task
-  xTaskCreate(
-      monitor_task, "sysmon", 4096, nullptr, tskIDLE_PRIORITY + 1, nullptr);
+  auto resourceString =
+      example_input::readLine("Enter VISA resource string: ");
+  if (resourceString.empty())
+  {
+    logger.log("ERROR: resource string is empty, going into infinite loop");
+    while (true)
+    {
+      vTaskDelay(portMAX_DELAY);
+    }
+  }
 
-  auto resource = manager.openResource(SERVER_IP_PORT_PAIR);
+  auto resource = manager.openResource(resourceString);
 
   if (resource == nullptr)
   {
     logger.log("ERROR: resource is a nullptr, going into infinite loop");
     while (true)
     {
+      vTaskDelay(portMAX_DELAY);
     }
   }
 
+  // read commands from UART and execute in a loop
+  auto commandPlan = example_input::readCommandPlan();
+
+  // start system monitor task
+  xTaskCreate(
+      monitor_task, "sysmon", 4096, nullptr, tskIDLE_PRIORITY + 1, nullptr);
+
   while (true)
   {
-
-    g_busy.store(true, std::memory_order_relaxed);
-    resource->query("MEAS:RES?\r\n");
-    g_busy.store(false, std::memory_order_relaxed);
+    for (const auto &step : commandPlan)
+    {
+      g_busy.store(true, std::memory_order_relaxed);
+      step.execute(*resource, step.command);
+      g_busy.store(false, std::memory_order_relaxed);
+    }
   }
 }

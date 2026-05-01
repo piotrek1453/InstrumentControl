@@ -3,8 +3,11 @@ set(INSTRUMENTCONTROL_LIB_DIR "${CMAKE_CURRENT_LIST_DIR}/../../../../lib")
 file(GLOB INSTRUMENTCONTROL_ESP32_SOURCES
      "${INSTRUMENTCONTROL_LIB_DIR}/ESP32/src/*.cpp")
 
-idf_component_register(SRCS ${INSTRUMENTCONTROL_ESP32_SOURCES}
-                       INCLUDE_DIRS "${INSTRUMENTCONTROL_LIB_DIR}"
-                                    "${INSTRUMENTCONTROL_LIB_DIR}/ESP32/inc")
+idf_component_register(
+  SRCS ${INSTRUMENTCONTROL_ESP32_SOURCES} INCLUDE_DIRS
+  "${INSTRUMENTCONTROL_LIB_DIR}" "${INSTRUMENTCONTROL_LIB_DIR}/ESP32/inc")
+
+target_include_directories(${COMPONENT_LIB}
+                           PUBLIC ${CMAKE_CURRENT_LIST_DIR}/../../../common)
 
 target_compile_definitions(${COMPONENT_LIB} PUBLIC IMPLEMENTATION_ESP32)

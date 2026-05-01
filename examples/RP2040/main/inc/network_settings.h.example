@@ -12,6 +12,7 @@ constexpr std::array<uint8_t, 4> NETWORK_GATEWAY = {0, 0, 0, 0};
 constexpr std::array<uint8_t, 4> NETWORK_DNS = {0, 0, 0, 0};
 constexpr bool NETWORK_USE_DHCP = true;
 
+// example IP:port if using address compiled into binary
 #define SERVER_IP_PORT_PAIR "192.168.1.10:6023"
 
 #endif // NETWORK_SETTINGS_H

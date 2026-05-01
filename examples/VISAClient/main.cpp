@@ -1,3 +1,4 @@
+#include "InputHelpers.hpp"
 #include "VISA/inc/ConsoleLogger.hpp"
 #include "VISAClient/inc/VISAClientResourceManager.hpp"
 #include "ifc/LoggerIfc.hpp"
@@ -5,11 +6,6 @@
 
 using Logger = ConsoleLogger;
 using ResourceManager = VISAClientResourceManager;
-
-// example commands to be repeated in communications loop
-constexpr auto SCPI_COMMANDS = {"*IDN?\r\n",
-                                "*RST\r\n",
-                                ":AUTOSET EXECUTE\r\n"};
 
 auto main() -> int
 {
@@ -28,9 +24,16 @@ auto main() -> int
     logger.log(fmt::format("Found resource: {}", resource));
   }
 
+  auto resourceString =
+      example_input::readLine("Enter VISA resource string: ");
+  if (resourceString.empty())
+  {
+    logger.log("ERROR: resource string is empty, terminating");
+    return 1;
+  }
+
   // resource opening example
-  auto resource =
-      manager.openResource("TCPIP::10.153.1.20::INSTR"); // example IP string
+  auto resource = manager.openResource(resourceString);
 
   if (resource == nullptr)
   {
@@ -38,16 +41,14 @@ auto main() -> int
     return 1;
   }
 
-  // resource communication example
-  for (const auto &command : SCPI_COMMANDS)
+  // resource comms example: read commands from CLI, decide whether they're a
+  // write or query and execute in infinite loop
+  auto commandPlan = example_input::readCommandPlan();
+  while (true)
   {
-    if (std::string_view(command).find('?') != std::string_view::npos)
+    for (const auto &step : commandPlan)
     {
-      resource->query(command);
-    }
-    else
-    {
-      resource->write(command);
+      step.execute(*resource, step.command);
     }
   }
 

@@ -4,6 +4,7 @@ idf_component_register(
   "src/wifi.cpp"
   INCLUDE_DIRS
   "inc"
+  "${CMAKE_CURRENT_LIST_DIR}/../../common"
   REQUIRES
   instrument_control
   esp_event
@@ -11,4 +12,5 @@ idf_component_register(
   esp_netif
   nvs_flash
   esp_timer
+  esp_driver_uart
   heap)
