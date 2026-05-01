@@ -3,7 +3,7 @@
 # ----------------------------------------
 BUILD_DIR ?= build
 IMPLEMENTATION ?= VISA            # VISA | VISAClient | ESP32 | RP2040
-BUILD_TYPE ?= Debug               # Debug or Release
+BUILD_TYPE ?= Release             # Debug or Release
 BUILD_EXAMPLES ?= OFF             # ON to build example app(s)
 GENERATOR ?= Ninja                # CMake generator
 TOOLCHAIN ?=                      # Optional: path to CMake toolchain file (MCU)

@@ -32,7 +32,16 @@ auto VISAClientResourceManager::listAvailableResources() const
   pyvisa_grpc::ListResourcesResponse resp;
   while (reader->Read(&resp))
   {
-    // each streamed response contains a resource_name field
+    // each streamed response contains a resource_name field and status
+    if (!resp.status().success())
+    {
+      mLogger.log(fmt::format("ListResources item failure: {} (resource={})",
+                              resp.status().message(),
+                              resp.resource_name()),
+                  LogLevel::Warn);
+      continue;
+    }
+
     results.push_back(resp.resource_name());
   }
 
@@ -57,6 +66,5 @@ auto VISAClientResourceManager::openResource(
     const std::string &resourceString) -> std::unique_ptr<ResourceIfc>
 {
   // TODO: Use VISA API to open; placeholder creates stub resource
-  return std::make_unique<VISAClientResource>(
-      mLogger, resourceString, mChannel_ptr);
+  return VISAClientResource::create(mLogger, resourceString, mChannel_ptr);
 }

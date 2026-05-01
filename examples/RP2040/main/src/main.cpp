@@ -140,14 +140,19 @@ auto main() -> int
   // start monitor timer: sample every 1 ms, aggregate to 1s windows
   add_repeating_timer_ms(1, monitor_timer_callback, nullptr, &g_monitor_timer);
 
+  if (resource == nullptr)
+  {
+    logger.log("ERROR: resource is a nullptr, going into infinite loop");
+    while (true)
+    {
+    }
+  }
+
   while (true)
   {
-    if (resource != nullptr)
-    {
-      g_busy.store(true, std::memory_order_relaxed);
-      resource->query("MEAS:RES?\r\n");
-      g_busy.store(false, std::memory_order_relaxed);
-    }
+    g_busy.store(true, std::memory_order_relaxed);
+    resource->query("MEAS:RES?\r\n");
+    g_busy.store(false, std::memory_order_relaxed);
 
     if (g_log_now)
     {

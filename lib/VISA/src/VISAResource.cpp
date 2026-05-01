@@ -59,8 +59,8 @@ VISAResource::VISAResource(
   }
   else
   {
-    mLogger.log("Created VISAResource with resource string " +
-                mResourceString);
+    mLogger.log(fmt::format("Created VISAResource with resource string {}",
+                            mResourceString));
     mIsOpen = true;
   }
 }
@@ -90,7 +90,7 @@ auto VISAResource::write(
     return false;
   }
 
-  mLogger.log("Sent message: \"" + command + '\"');
+  mLogger.log(fmt::format("Sent message: \"{}\"", command));
   return true;
 }
 
@@ -118,7 +118,7 @@ auto VISAResource::read() -> ReadResult
 
   readResult = ReadResult::success(
       std::string(reinterpret_cast<char *>(readBuffer.data()), mIOBytes));
-  mLogger.log("Received response: \"" + readResult.value + '\"');
+  mLogger.log(fmt::format("Received response: \"{}\"", readResult.value));
   return readResult;
 }
 

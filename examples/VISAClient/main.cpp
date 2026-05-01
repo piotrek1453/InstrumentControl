@@ -22,20 +22,32 @@ auto main() -> int
 
   logger.log("Example: VISAClient resource manager instantiated");
 
+  // resource enumeration example
+  for (const auto &resource : manager.listAvailableResources())
+  {
+    logger.log(fmt::format("Found resource: {}", resource));
+  }
+
+  // resource opening example
   auto resource =
       manager.openResource("TCPIP::10.153.1.20::INSTR"); // example IP string
-  if (resource != nullptr)
+
+  if (resource == nullptr)
   {
-    for (const auto &command : SCPI_COMMANDS)
+    logger.log("ERROR: resource is a nullptr, terminating");
+    return 1;
+  }
+
+  // resource communication example
+  for (const auto &command : SCPI_COMMANDS)
+  {
+    if (std::string_view(command).find('?') != std::string_view::npos)
     {
-      if (std::string_view(command).find('?') != std::string_view::npos)
-      {
-        resource->query(command);
-      }
-      else
-      {
-        resource->write(command);
-      }
+      resource->query(command);
+    }
+    else
+    {
+      resource->write(command);
     }
   }
 

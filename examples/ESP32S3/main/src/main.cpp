@@ -103,13 +103,19 @@ extern "C" void app_main(
 
   auto resource = manager.openResource(SERVER_IP_PORT_PAIR);
 
+  if (resource == nullptr)
+  {
+    logger.log("ERROR: resource is a nullptr, going into infinite loop");
+    while (true)
+    {
+    }
+  }
+
   while (true)
   {
-    if (resource != nullptr)
-    {
-      g_busy.store(true, std::memory_order_relaxed);
-      resource->query("MEAS:RES?\r\n");
-      g_busy.store(false, std::memory_order_relaxed);
-    }
+
+    g_busy.store(true, std::memory_order_relaxed);
+    resource->query("MEAS:RES?\r\n");
+    g_busy.store(false, std::memory_order_relaxed);
   }
 }
