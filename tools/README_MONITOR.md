@@ -4,12 +4,12 @@ Universal launcher and analyzer for measuring resource consumption across Instru
 
 ## Features
 
-✅ **Non-invasive** — No modifications to application code  
-✅ **Pass-through stdin** — Applications get normal interactive input  
-✅ **Multi-process** — Launch and monitor multiple processes simultaneously  
-✅ **Automatic metrics** — Memory, CPU, timestamps collected to JSON Lines  
-✅ **Flexible configuration** — Interactive UI or JSON config files  
-✅ **Analysis tools** — Summary tables, timelines, CSV export  
+✅ **Non-invasive** — No modifications to application code
+✅ **Pass-through stdin** — Applications get normal interactive input
+✅ **Multi-process** — Launch and monitor multiple processes simultaneously
+✅ **Automatic metrics** — Memory, CPU, timestamps collected to JSON Lines
+✅ **Flexible configuration** — Interactive UI or JSON config files
+✅ **Analysis tools** — Summary tables, timelines, CSV export
 
 ## Quick Start
 

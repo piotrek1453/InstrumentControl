@@ -13,7 +13,9 @@ Useful for repeatable setups (e.g., VISAClient with server + client)
     "platform_name": "VISAClient-server",
     "process_type": "server",
     "startup_delay": 0,
-    "args": ["lib/VISAClient/pyvisa-grpc/server/pyvisa_grpc_server.py"]
+    "args": [
+      "lib/VISAClient/pyvisa-grpc/server/pyvisa_grpc_server.py"
+    ]
   },
   {
     "binary": "./build/examples/VISAClient/main",
