@@ -1,0 +1,23 @@
+[
+  {
+    "binary": "bash",
+    "platform_name": "VISAClient-server",
+    "process_type": "server",
+    "startup_delay": 0.0,
+    "args": [
+      "-lc",
+      "just run"
+    ],
+    "log_to_file": true,
+    "log_to_console": false,
+    "cwd": "lib/VISAClient/pyvisa-grpc/server"
+  },
+  {
+    "binary": "./build/examples/VISA/InstrumentControlVISA",
+    "platform_name": "VISAClient-client",
+    "process_type": "client",
+    "startup_delay": 2.0,
+    "args": [],
+    "log_to_file": true
+  }
+]

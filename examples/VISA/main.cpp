@@ -17,11 +17,12 @@ auto main() -> int
 
   logger.log("Example: VISA resource manager instantiated");
 
-  // resource enumeration example
-  for (const auto &resource : manager.listAvailableResources())
-  {
-    logger.log(fmt::format("Found resource: {}", resource));
-  }
+  // commented out for testing
+  // // resource enumeration example
+  // for (const auto &resource : manager.listAvailableResources())
+  // {
+  //   logger.log(fmt::format("Found resource: {}", resource));
+  // }
 
   auto resourceString =
       example_input::readLine("Enter VISA resource string: ");

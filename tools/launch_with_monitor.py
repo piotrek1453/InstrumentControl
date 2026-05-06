@@ -29,10 +29,70 @@ class ProcessConfig:
     process_type: str  # "server", "client", "standalone"
     startup_delay: float = 0.0
     args: List[str] = None
+    log_to_file: bool = False
+    log_to_console: bool = True
+    cwd: Optional[str] = None
 
     def __post_init__(self):
         if self.args is None:
             self.args = []
+
+
+class LogReader:
+    """Reads process output and writes to file and/or console"""
+
+    def __init__(
+        self,
+        stream,
+        log_file: Optional[str] = None,
+        write_to_console: bool = True,
+    ):
+        self.stream = stream
+        self.log_file = log_file
+        self.write_to_console = write_to_console
+        self.thread = None
+        self.is_running = True
+        self.log_handle = None
+
+    def start(self):
+        """Start reading stream in background thread"""
+        if self.log_file:
+            try:
+                self.log_handle = open(self.log_file, "a")
+            except Exception as e:
+                print(
+                    f"[ERROR] Failed to open log file {self.log_file}: {e}",
+                    file=sys.stderr,
+                )
+
+        self.thread = threading.Thread(target=self._read_loop, daemon=True)
+        self.thread.start()
+
+    def _read_loop(self):
+        """Read from stream and write to configured sinks"""
+        try:
+            for chunk in iter(lambda: self.stream.read(1), ""):
+                if not chunk:
+                    break
+                if self.write_to_console:
+                    # Write to console immediately, even for prompts without newline
+                    sys.stdout.write(chunk)
+                    sys.stdout.flush()
+                # Write to file if configured
+                if self.log_handle:
+                    self.log_handle.write(chunk)
+                    self.log_handle.flush()
+        except Exception as e:
+            print(f"[ERROR] Log reader error: {e}", file=sys.stderr)
+        finally:
+            if self.log_handle:
+                self.log_handle.close()
+            self.stream.close()
+
+    def join(self, timeout: Optional[float] = None):
+        """Wait for reader thread to finish"""
+        if self.thread:
+            self.thread.join(timeout=timeout)
 
 
 class ResourceMonitor:
@@ -61,9 +121,8 @@ class ResourceMonitor:
         """Main monitoring loop"""
         try:
             putil_proc = psutil.Process(self.proc.pid)
-            # Initialize CPU percent
-            putil_proc.cpu_percent(interval=None)
-            time.sleep(0.1)
+            # Initialize CPU percent with 0.5s interval for accurate measurement
+            putil_proc.cpu_percent(interval=0.5)
 
             while self.proc.poll() is None and self.is_running:
                 try:
@@ -77,7 +136,7 @@ class ResourceMonitor:
                         "type": self.config.process_type,
                         "rss_mb": round(mem_info.rss / 1024 / 1024, 2),
                         "vms_mb": round(mem_info.vms / 1024 / 1024, 2),
-                        "cpu_pct": round(putil_proc.cpu_percent(interval=None), 2),
+                        "cpu_pct": round(putil_proc.cpu_percent(interval=0.5), 2),
                         "cpu_user_ms": int(cpu_times.user * 1000),
                         "cpu_sys_ms": int(cpu_times.system * 1000),
                     }
@@ -87,7 +146,7 @@ class ResourceMonitor:
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     break
 
-                time.sleep(1)
+                time.sleep(0.5)
 
         except Exception as e:
             print(
@@ -149,12 +208,22 @@ class LauncherUI:
         args_str = input("Arguments (space-separated, leave empty for none): ").strip()
         args = args_str.split() if args_str else []
 
+        log_to_file = (
+            input("Save process logs to file? (y/n) [n]: ").strip().lower() == "y"
+        )
+
+        log_to_console = (
+            input("Show process logs in CLI too? (y/n) [y]: ").strip().lower() != "n"
+        )
+
         return ProcessConfig(
             binary=binary,
             platform_name=platform_name,
             process_type=process_type,
             startup_delay=startup_delay,
             args=args,
+            log_to_file=log_to_file,
+            log_to_console=log_to_console,
         )
 
     @staticmethod
@@ -183,6 +252,12 @@ class LauncherUI:
                 print(f"   Startup delay: {cfg.startup_delay}s")
             if cfg.args:
                 print(f"   Args: {' '.join(cfg.args)}")
+            if cfg.log_to_file:
+                print(f"   Logs: YES (to file)")
+                if cfg.log_to_console:
+                    print(f"   Logs: YES (to CLI)")
+                else:
+                    print(f"   Logs: NO (CLI)")
 
         confirmed = input("\nContinue? (y/n) [y]: ").strip().lower()
         return confirmed != "n"
@@ -194,9 +269,10 @@ class Launcher:
     def __init__(self, configs: List[ProcessConfig], output_dir: str = "."):
         self.configs = configs
         self.output_dir = Path(output_dir)
-        self.output_dir.mkdir(exist_ok=True)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
         self.processes: List[subprocess.Popen] = []
         self.monitors: List[ResourceMonitor] = []
+        self._log_readers = {}
 
     def launch_all(self):
         """Launch all configured processes"""
@@ -220,24 +296,56 @@ class Launcher:
         """Launch a single process"""
         metrics_file = self.output_dir / f"metrics_{config.platform_name}.jsonl"
         metrics_list = []
+        log_file = None
+        log_readers = []
+
+        if config.log_to_file:
+            log_file = self.output_dir / f"logs_{config.platform_name}.txt"
 
         cmd = [config.binary] + config.args
         print(f"[{index + 1}] Starting {config.platform_name}")
         print(f"    Command: {' '.join(cmd)}")
         print(f"    Metrics: {metrics_file}")
+        if log_file:
+            print(f"    Logs: {log_file}")
 
         try:
-            # Pass through stdin, capture output to file and stderr
-            proc = subprocess.Popen(
-                cmd,
+            # Pass through stdin, but capture stdout/stderr for logging
+            popen_kwargs = dict(
                 stdin=sys.stdin,  # Share stdin with parent
-                stdout=sys.stdout,  # Share stdout with parent
-                stderr=sys.stderr,  # Share stderr with parent
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 text=True,
                 bufsize=1,  # Line buffering
             )
 
+            if config.cwd:
+                popen_kwargs["cwd"] = str(Path(config.cwd))
+
+            proc = subprocess.Popen(cmd, **popen_kwargs)
+
             self.processes.append(proc)
+
+            # Start log readers for stdout and stderr
+            stdout_reader = LogReader(
+                proc.stdout,
+                str(log_file) if log_file else None,
+                write_to_console=config.log_to_console,
+            )
+            stdout_reader.start()
+            log_readers.append(stdout_reader)
+
+            stderr_reader = LogReader(
+                proc.stderr,
+                str(log_file) if log_file else None,
+                write_to_console=config.log_to_console,
+            )
+            stderr_reader.start()
+            log_readers.append(stderr_reader)
+
+            # Store log readers for later cleanup
+            self._log_readers = getattr(self, "_log_readers", {})
+            self._log_readers[proc.pid] = log_readers
 
             # Start monitoring
             monitor = ResourceMonitor(proc, config, str(metrics_file), metrics_list)
@@ -284,6 +392,11 @@ class Launcher:
         """Save metrics and print summary"""
         print("\n[INFO] Finalizing...", file=sys.stderr)
 
+        # Wait for log readers to finish
+        for log_readers in self._log_readers.values():
+            for reader in log_readers:
+                reader.join(timeout=2)
+
         # Stop monitors
         for monitor in self.monitors:
             monitor.is_running = False
@@ -302,7 +415,10 @@ class Launcher:
             metrics_file = self.output_dir / f"metrics_{config.platform_name}.jsonl"
             num_samples = len(monitor.metrics_list)
             print(f"\n{i}. {config.platform_name}", file=sys.stderr)
-            print(f"   File: {metrics_file}", file=sys.stderr)
+            print(f"   Metrics: {metrics_file}", file=sys.stderr)
+            if config.log_to_file:
+                log_file = self.output_dir / f"logs_{config.platform_name}.txt"
+                print(f"   Logs: {log_file}", file=sys.stderr)
             print(f"   Samples: {num_samples}", file=sys.stderr)
 
             if monitor.metrics_list:

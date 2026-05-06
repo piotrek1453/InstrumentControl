@@ -1,0 +1,10 @@
+[
+  {
+    "binary": "./build/examples/VISA/InstrumentControlVISA",
+    "platform_name": "VISA",
+    "process_type": "server",
+    "startup_delay": 0.0,
+    "args": [],
+    "log_to_file": true
+  }
+]

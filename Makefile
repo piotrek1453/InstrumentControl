@@ -10,7 +10,7 @@ TOOLCHAIN ?=                      # Optional: path to CMake toolchain file (MCU)
 CMAKE_ARGS ?=                     # Extra CMake -D flags, e.g. -DPICO_SDK_PATH=...
 SRCS := $(shell find examples lib -type f \( -name '*.cpp' -o -name '*.hpp' -o -name '*.h' \) -not -path '*/build/*' -not -path '*/third_party/*')
 
-.PHONY: build clean init_venv help conan pre_build build-visa build-visaclient build-esp32 build-rp2040 run-example
+.PHONY: build clean init_venv help conan pre_build build-visa build-visaclient build-esp32 build-rp2040 run-example profile-visa profile-visa-client
 
 # Decide if we need Conan dependencies by default
 # PC impls use Conan (VISA, VISAClient); MCU impls default to NO
@@ -148,3 +148,12 @@ help:
 	@echo "  BUILD_EXAMPLES=$(BUILD_EXAMPLES)"
 	@echo "  USE_CONAN=$(USE_CONAN)"
 	@echo "  GENERATOR=$(GENERATOR)"
+
+# ----------------------------------------
+# Launcher configs (monitoring + logs)
+# ----------------------------------------
+profile-visa:
+	python3 tools/launch_with_monitor.py --config tools/launch_configs/visa_server.json --output ./results/visa
+
+profile-visa-client:
+	python3 tools/launch_with_monitor.py --config tools/launch_configs/visa_client.json --output ./results/visa_client
