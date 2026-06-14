@@ -44,10 +44,22 @@ auto main() -> int
 
   // resource comms example: read commands from CLI, decide whether they're a
   // write or query and execute in infinite loop
-  auto commandPlan = example_input::readCommandPlan();
+
+  // commands to be executed once, initialization
+  std::printf("Initialization SCPI commands, executed only once at startup\n");
+  auto commandPlanInit = example_input::readCommandPlan();
+  // commands to be executed in loop
+  std::printf("Repeated SCPI commands, executed in an infinite loop\n");
+  auto commandPlanRepeat = example_input::readCommandPlan();
+  // execute init commands
+  for (const auto &step : commandPlanInit)
+  {
+    step.execute(*resource, step.command);
+  }
+  // execute looped commands
   while (true)
   {
-    for (const auto &step : commandPlan)
+    for (const auto &step : commandPlanRepeat)
     {
       step.execute(*resource, step.command);
     }

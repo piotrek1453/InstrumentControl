@@ -157,15 +157,29 @@ auto main() -> int
     }
   }
 
-  auto commandPlan = example_input::readCommandPlan();
+  // resource comms example: read commands from CLI, decide whether they're a
+  // write or query and execute in infinite loop
+
+  // commands to be executed once, initialization
+  std::printf("Initialization SCPI commands, executed only once at startup\n");
+  auto commandPlanInit = example_input::readCommandPlan();
+  // commands to be executed in loop
+  std::printf("Repeated SCPI commands, executed in an infinite loop\n");
+  auto commandPlanRepeat = example_input::readCommandPlan();
 
   // start monitor timer: sample every 1 ms, aggregate to 1s windows
   add_repeating_timer_ms(1, monitor_timer_callback, nullptr, &g_monitor_timer);
 
+  // execute init commands
+  for (const auto &step : commandPlanInit)
+  {
+    step.execute(*resource, step.command);
+  }
+
   while (true)
   {
-
-    for (const auto &step : commandPlan)
+    // execute looped commands
+    for (const auto &step : commandPlanRepeat)
     {
       g_busy.store(true, std::memory_order_relaxed);
       step.execute(*resource, step.command);
